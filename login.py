@@ -28,22 +28,19 @@ class Login:
     def getCookie(self):
         driver = webdriver.Firefox()
         driver.get(Config.LOGIN_PAGE_URL)
-        time.sleep(10)
-
-        login_a_ele = driver.find_element_by_xpath(Config.LOGIN_A_XPATH)
-        print login_a_ele.find_element_by_tag_name("./a").get_attribute("href")
         time.sleep(Config.WAIT_TIME)
+        try:
+            email_ele = driver.find_element_by_xpath(Config.LOGIN_EMAIL_XPATH)
+            password_ele = driver.find_element_by_xpath(Config.LOGIN_PASSWD_XPATH)
+            email_ele.send_keys(self.__email)
+            password_ele.send_keys(self.__password)
+            driver.find_element_by_xpath(Config.LOGIN_SUBMIT_XPATH).click()
 
-        # email_ele = driver.find_element_by_xpath(Config.LOGIN_EMAIL_XPATH)
-        # password_ele = driver.find_element_by_xpath(Config.LOGIN_PASSWD_XPATH)
-        # email_ele.send_keys(self.__email)
-        # password_ele.send_keys(self.__password)
-        # driver.find_element_by_xpath(Config.LOGIN_SUBMIT_XPATH).click()
-        #
-        # time.sleep(Config.WAIT_TIME)
-        # login_cookies = driver.get_cookies()
-        # print login_cookies
-        driver.quit()
+            time.sleep(Config.WAIT_TIME)
+            login_cookies = driver.get_cookies()
+            Config.COOKIES = login_cookies
+        finally:
+            driver.quit()
 
 if __name__ == "__main__":
     Login().getCookie()
