@@ -1,3 +1,3 @@
 #登陆信息
-email=1414760632@qq.com
-password=13965445553
+email=nmjungyumi@sina.com
+password=nmjungyumi
