@@ -1,0 +1,35 @@
+### common ###
+*.txt
+*.def
+*.dsp
+*.lib
+*.doc
+*.lnt
+*.pm
+*.xls
+*.dbg
+*.DBG
+*.o
+*.plg
+*.keep
+
+### git ###
+#.gitignore
+
+### windows ###
+*.exe
+*.dll
+*.bat
+
+### temp ###
+*.log
+*.cmm
+*.men
+*.ini
+*.fig
+*.cmp
+*.tmp
+
+### python ###
+*.pyc
+
