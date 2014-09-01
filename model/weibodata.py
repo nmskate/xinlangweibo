@@ -2,6 +2,11 @@
 #coding=utf-8
 
 class WeiboItem:
+
+    SEND_TYPE_WEIBO = 0
+    SEND_TYPE_ANDRIOD = 1
+    SEND_TYPE_IOS = 2
+
     #点赞数
     zan_num = 0
 
@@ -15,7 +20,7 @@ class WeiboItem:
     pinglun_num = 0
 
     #发表方式, 0代表weibo, 1代表Andriod客户端, 2代表ios客户端
-    send_type = 0
+    send_type = SEND_TYPE_WEIBO
 
 class WeiboData:
     #博主名

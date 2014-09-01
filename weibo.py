@@ -5,6 +5,8 @@ from utils import crawl
 from model import weibodata
 import config
 import urllib2
+import json
+import re
 
 class Weibo:
 
@@ -27,8 +29,7 @@ class Weibo:
             real_weibo_url = cls.__get_real_weibo_url(html_weibo_home)
 
             html_real_weibo_url = crawl.crawl_weibo(real_weibo_url)
-            print html_real_weibo_url
-            
+
             #解析'微博'标签页中的数据
             weibo_data = cls.__fetch_data(html_real_weibo_url)
 
@@ -55,7 +56,7 @@ class Weibo:
     def __get_real_weibo_url(cls, real_name_url):
         try:
             start = real_name_url.find('pftb_itm S_line1')
-            end = real_name_url.find('微博', start)
+            end = real_name_url.find('主页', start)
             tmp = real_name_url[(start + 1) : end]
             real_weibo_url = ''
             for i in range(1000):
@@ -67,6 +68,7 @@ class Weibo:
                     break
                 else:
                     tmp = tmp[(start + 1) : end]
+            real_weibo_url = real_weibo_url.replace('home', 'weibo')
             return real_weibo_url
         except:
             raise Exception, '3'
@@ -74,7 +76,25 @@ class Weibo:
     '''获取微博的数据'''
     @classmethod
     def __fetch_data(cls, html_weibo):
-        pass
+        #这里解析出含有数据的html片段
+        start_1 = html_weibo.rfind('<script', 0, html_weibo.find('pl.content.homeFeed.index'))
+        end_1 = html_weibo.find('</script>', start_1)
+        html_data = html_weibo[start_1 : end_1].strip()
+
+        #使用BeautifulSoup, lxml总出问题, 好吧, 还是分割字符串吧
+        start = 1
+        while start > 0:
+            start = html_data.find('WB_feed_type SW_fun S_line2', start)
+            div_index_start = html_data.rfind('div', 0, start)
+            div_index_end = html_data.find('>', start)
+            feedtype_index = html_data.find('feedtype', div_index_start, div_index_end)
+            if feedtype_index < 0:
+                wb_handle_index = html_data.find('WB_handle', start)
+                zan_end = html_data.find('</a>', wb_handle_index)
+                zan_end = html_data.rfind(')', wb_handle_index, zan_end)
+                zan_start = html_data.rfind('(', wb_handle_index, zan_end)
+                print zan_start, zan_end
+            start = start + 1
 
 if __name__ == "__main__":
     Weibo.do_weibo(['英国报姐'])
