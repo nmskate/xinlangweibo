@@ -1,23 +1,12 @@
 #!/usr/bin/env python
 #coding=utf-8
 
-import os
-import config
-import crawl
+import weibo
 
 if __name__ == "__main__":
-    url = config.BASE_URL + '/uktimes'
-    html = os.popen("http -b '" + url + "' User_Agent:'" + config.USER_AGENT + "' Cookie:'" + config.COOKIE + "'").read()
+    weibo_all_data = weibo.Weibo.do_weibo(['英国报姐'])
 
-    start = html.find('pftb_itm S_line1')
-    end = html.find('微博', start)
-    tmp = html[(start + 1) : end]
-    for i in range(1000):
-        start = tmp.find('pftb_itm S_line1')
-        if start == -1:
-            href = tmp[tmp.find('href') : end]
-            href = href[href.find('=') : href.find(' ')]
-            print config.BASE_URL + href.replace("\\", '').strip("=\"")
-            break
-        else:
-            tmp = tmp[(start + 1) : end]
+    for item in weibo_all_data:
+        print item.name, item.home_url, item.weibo_num, item.fensi_num, item.guanzhu_num
+        for item_data in item.latest_weibo:
+            print item_data.send_date, item_data.zan_num, item_data.zhuanfa_num, item_data.pinglun_num
