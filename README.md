@@ -5,8 +5,5 @@
 lxml:
     sudo easy_install lxml
 
-httpie:
-    https://github.com/jakubroztocil/httpie
-
-BeautifulSoup:
-    pip install beautifulsoup4 或 easy_install beautifulsoup4
+xlrd:
+    到官网:https://pypi.python.org/pypi/xlrd, 下载安装
