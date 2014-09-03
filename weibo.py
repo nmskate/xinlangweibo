@@ -21,8 +21,8 @@ class Weibo:
 
             #微博名的搜索地址
             name_url = cls.__gen_name_url(name)
-
             html_contain_real_home_url = crawl.crawl_weibo(name_url)
+
             #用户的微博主页地址
             real_home_url = cls.__get_real_home_url(html_contain_real_home_url)
             weibo_data.home_url = real_home_url
@@ -53,7 +53,10 @@ class Weibo:
     @classmethod
     def __get_real_home_url(cls, real_home_html):
         try:
-            href_start = real_home_html.find('href', real_home_html.find('person_name'))
+            name_start = real_home_html.find('person_name')
+            if name_start < 0:
+                name_start = real_home_html.find('star_name')
+            href_start = real_home_html.find('href', name_start)
             href_end = real_home_html.find(' ', href_start + 1)
             href_all = real_home_html[href_start : href_end]
             return (href_all[href_all.find('=') + 1 :]).replace("\\", '').strip("=\"")
@@ -142,6 +145,8 @@ class Weibo:
                     weibo_item.send_date = datetime.datetime.strptime(send_date.replace('今天', datetime.datetime.now().strftime('%Y-%m-%d')), '%Y-%m-%d %H:%M')
                 elif send_date.find('月') >= 0:
                     weibo_item.send_date = datetime.datetime.strptime(str(datetime.datetime.now().year) + '-' + send_date.replace('月', '-').replace('日', ''), '%Y-%m-%d %H:%M')
+                else:
+                    weibo_item.send_date = datetime.datetime.strptime(send_date, '%Y-%m-%d %H:%M')
 
                 send_type_start = html_data.find('<a', send_date_end)
                 send_type_end = html_data.find('/a>', send_type_start)
@@ -152,6 +157,16 @@ class Weibo:
                     weibo_item.send_type = weibodata.WeiboItem.SEND_TYPE_ANDRIOD
                 elif send_type.find('weibo') >= 0:
                     weibo_item.send_type = weibodata.WeiboItem.SEND_TYPE_WEIBO
+                elif send_type.find('360安全浏览器') >= 0:
+                    weibo_item.send_type = weibodata.WeiboItem.SEND_TYPE_360BROWSER
+                elif send_type.find('搜狗高速浏览器') >= 0:
+                    weibo_item.send_type = weibodata.WeiboItem.SEND_TYPE_SOUGOUBROWSER
+                elif send_type.find('iPhone 5s') >= 0:
+                    weibo_item.send_type = weibodata.WeiboItem.SEND_TYPE_IPHNOE_5S
+                elif send_type.find('iPhone') >= 0:
+                    weibo_item.send_type = weibodata.WeiboItem.SEND_TYPE_IPHNOE
+                elif send_type.find('定时showone') >= 0:
+                    weibo_item.send_type = weibodata.WeiboItem.SEND_TYPE_SHOWONE
 
                 latest_weibo.append(weibo_item)
 

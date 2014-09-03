@@ -5,7 +5,11 @@ class WeiboItem:
 
     SEND_TYPE_WEIBO = 0
     SEND_TYPE_ANDRIOD = 1
-    SEND_TYPE_IOS = 2
+    SEND_TYPE_IPHNOE_5S = 2
+    SEND_TYPE_IPHNOE = 3
+    SEND_TYPE_360BROWSER = 11
+    SEND_TYPE_SOUGOUBROWSER = 12
+    SEND_TYPE_SHOWONE = 21
 
     #点赞数
     zan_num = 0
