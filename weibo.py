@@ -34,9 +34,16 @@ class Weibo:
             #微博主页中的'微博'标签页地址
             real_weibo_url = cls.__get_real_weibo_url(html_weibo_home)
 
+            domain_id = cls.__get_domain_id_from_real_url(real_weibo_url)
+
+            user_id = cls.__get_user_id_from_real_url(real_weibo_url)
+
             html_real_weibo_url = crawl.crawl_weibo(real_weibo_url)
             #解析'微博'标签页中的数据
-            weibo_data.latest_weibo = cls.__fetch_data(html_real_weibo_url)
+            latest_weibo_data = cls.__fetch_latest_data(html_real_weibo_url)
+
+            #如果第一页中的数据不够, 发ajax请求, 请求第一页的所有数据
+            weibo_data.latest_weibo = cls.__fetch_all_data(domain_id, user_id, latest_weibo_data)
 
             weibo_data_all.append(weibo_data)
 
@@ -53,9 +60,9 @@ class Weibo:
     @classmethod
     def __get_real_home_url(cls, real_home_html):
         try:
-            name_start = real_home_html.find('person_name')
+            name_start = real_home_html.find('star_name')
             if name_start < 0:
-                name_start = real_home_html.find('star_name')
+                name_start = real_home_html.find('person_name')
             href_start = real_home_html.find('href', name_start)
             href_end = real_home_html.find(' ', href_start + 1)
             href_all = real_home_html[href_start : href_end]
@@ -87,7 +94,7 @@ class Weibo:
 
     '''获取微博的数据'''
     @classmethod
-    def __fetch_data(cls, html_weibo):
+    def __fetch_latest_data(cls, html_weibo):
         latest_weibo = []
         #这里解析出含有数据的html片段
         start_1 = html_weibo.rfind('<script', 0, html_weibo.find('pl.content.homeFeed.index'))
@@ -215,6 +222,32 @@ class Weibo:
             return int(html_weibo[weibo_start + 1 : weibo_end])
         else:
             return 0
+
+    '''获取domain_id'''
+    @classmethod
+    def __get_domain_id_from_real_url(cls, real_url):
+        domain_start = real_url.find('page_')
+        domain_end = real_url.find('&', domain_start)
+        if domain_end < 0:
+            domain_end = real_url.find('#', domain_start)
+        return real_url[domain_start + len('page_') : domain_end]
+
+    '''获取用户id'''
+    @classmethod
+    def __get_user_id_from_real_url(cls, real_url):
+        real_url_tmp = real_url.lstrip('abcdefghijklmnopqrstuvwxyz:/.')
+        return real_url_tmp[0 : real_url_tmp.find('/')]
+
+    '''滚动页面的ajax请求地址,一共有两次滚动,所以roll_num只能取1, 2'''
+    @classmethod
+    def __first_roll_ajax_url(cls, domain_id, page_num, roll_num, id):
+        return 'http://weibo.com/p/aj/mblog/mbloglist?domain=' + domain_id + '&pre_page=' + page_num + '&page=' + page_num + '&pagebar=' + roll_num + '&id=' + id
+
+    '''获取最近7天内的所有微博'''
+    @classmethod
+    def __fetch_all_data(cls, domain_id, user_id, latest_weibo_data):
+        if len(latest_weibo_data) > 0:
+            print domain_id, user_id, latest_weibo_data[len(latest_weibo_data) - 1].send_date
 
 if __name__ == "__main__":
     Weibo.do_weibo(['英国报姐', '张伯庸'])
