@@ -4,7 +4,12 @@
 import weibo
 
 if __name__ == "__main__":
-    weibo_all_data = weibo.Weibo.do_weibo(['王思聪'])
+    #抓取数据
+    weibo_all_data = weibo.Weibo.fetch_weibo(['英国报姐'])
+    #组织数据
+    # weibo_all_data = weibo.Weibo.organize_data(weibo_all_data)
+    #生成excel表格
+    # excel.output_data(weibo_all_data)
 
     # for item in weibo_all_data:
     #     print item.name, item.home_url, item.guanzhu_num, item.weibo_num, item.fensi_num
