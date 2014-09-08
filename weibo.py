@@ -46,6 +46,7 @@ class Weibo:
 
         return weibo_data_all
 
+
     '''生成按名字搜索的页面地址'''
     @classmethod
     def __gen_name_url(cls, name):

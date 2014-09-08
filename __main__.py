@@ -6,10 +6,8 @@ import weibo
 if __name__ == "__main__":
     #抓取数据
     weibo_all_data = weibo.Weibo.fetch_weibo(['英国报姐'])
-    #组织数据
-    # weibo_all_data = weibo.Weibo.organize_data(weibo_all_data)
-    #生成excel表格
-    # excel.output_data(weibo_all_data)
+    #生成excel表格，只取前3天的数据
+    excel.create_output_file(weibo_all_data)
 
     # for item in weibo_all_data:
     #     print item.name, item.home_url, item.guanzhu_num, item.weibo_num, item.fensi_num
