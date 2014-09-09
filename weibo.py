@@ -7,7 +7,6 @@ import datetime
 import config
 import urllib2
 import json
-import re
 
 class Weibo:
 
@@ -24,7 +23,7 @@ class Weibo:
             html_contain_real_home_url = crawl.crawl_weibo(name_url)
 
             #用户的微博主页地址
-            real_home_url = cls.__get_real_home_url(html_contain_real_home_url)
+            real_home_url = cls.__get_real_home_url(name, html_contain_real_home_url)
             weibo_data.home_url = real_home_url
 
             html_weibo_home = crawl.crawl_weibo(real_home_url)
@@ -35,17 +34,15 @@ class Weibo:
             real_weibo_url = cls.__get_real_weibo_url(html_weibo_home)
 
             domain_id = cls.__get_domain_id_from_real_url(real_weibo_url)
-
             user_id = cls.__get_user_id_from_real_url(real_weibo_url)
 
-            html_real_weibo_url = crawl.crawl_weibo(real_weibo_url)
             #解析'微博'标签页中的数据，默认请求７天内的数据
-            weibo_data.latest_weibo = cls.__fetch_all_data(domain_id, user_id, html_real_weibo_url)
+            weibo_data.latest_weibo = cls.__fetch_all_data(domain_id, user_id, real_weibo_url)
 
             weibo_data_all.append(weibo_data)
+            print weibo_data.name, weibo_data.home_url, len(weibo_data.latest_weibo)
 
         return weibo_data_all
-
 
     '''生成按名字搜索的页面地址'''
     @classmethod
@@ -56,15 +53,26 @@ class Weibo:
 
     '''获取按名字搜索页面中的真实地址'''
     @classmethod
-    def __get_real_home_url(cls, real_home_html):
+    def __get_real_home_url(cls, name, real_home_html):
         try:
-            name_start = real_home_html.find('star_name')
-            if name_start < 0:
-                name_start = real_home_html.find('person_name')
-            href_start = real_home_html.find('href', name_start)
-            href_end = real_home_html.find(' ', href_start + 1)
-            href_all = real_home_html[href_start : href_end]
-            return (href_all[href_all.find('=') + 1 :]).replace("\\", '').strip("=\"")
+            name_start = 0
+            title = ""
+            while title.strip() != name.strip() and name_start != -1:
+                name_start_1 = real_home_html.find('star_name', name_start + 1)
+                name_start_2 = real_home_html.find('person_name', name_start + 1)
+                name_start = name_start_1 if name_start_1 > 0 and name_start_2 > 0 and name_start_1 < name_start_2 else name_start_2
+                title_start = real_home_html.find('title', name_start)
+                title_end = real_home_html.find(' ', title_start + 1)
+                title_all = real_home_html[title_start : title_end]
+                title = eval("u'" + (title_all[title_all.find('=') + 1 :]).replace("\\\"", "") + "'").encode('utf-8')
+
+            if name_start == -1:
+                return ""
+            else:
+                href_start = real_home_html.find('href', name_start)
+                href_end = real_home_html.find(' ', href_start + 1)
+                href_all = real_home_html[href_start : href_end]
+                return (href_all[href_all.find('=') + 1 :]).replace("\\", '').strip("=\"")
         except:
             raise Exception, '2'
 
