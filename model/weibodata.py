@@ -30,6 +30,9 @@ class WeiboData:
     #博主名
     name = ""
 
+    #excel文件中的博主名
+    bozhu_excel_name = ""
+
     #博主主页地址
     home_url = ""
 

@@ -16,6 +16,6 @@ if __name__ == "__main__":
     workbook = Workbook()
     for sheet_item in excel_file.sheet_items:
         weibo_all_data = weibo.Weibo.fetch_weibo(sheet_item)
-        excel.output_weibo_data(weibo_all_data, excel_file.workbook.sheet_by_name(sheet_item.name), workbook)
-    end_time = datetime.now()
-    print '共耗时：', (end_time - start_time).minutes, '分钟'
+        excel.output_weibo_data(weibo_all_data, sheet_item, workbook)
+    workbook.save('result_' + datetime.now().strftime('%Y%m%d%H%M%S') + '.xlsx')
+    print '共耗时：', (datetime.now() - start_time).seconds / 60, '分钟'
