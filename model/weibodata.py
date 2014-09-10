@@ -27,8 +27,18 @@ class WeiboItem:
     send_type = SEND_TYPE_WEIBO
 
 class WeiboData:
+
+    DATA_STATUS_OK = 0
+
+    DATA_STATUS_ERROR = 1
+
+    DATA_STATUS_URL_ERROR = 2
+
     #博主名
     name = ""
+
+    #excel文件中的博主名
+    bozhu_excel_name = ""
 
     #博主主页地址
     home_url = ""
@@ -41,6 +51,9 @@ class WeiboData:
 
     #微博数
     weibo_num = 0
+
+    #该微博的状态
+    data_status = DATA_STATUS_OK
 
     #最近微博
     latest_weibo = []

@@ -65,6 +65,7 @@ class SheetItem:
     def __init__(self, num, name):
         self.num = num
         self.name = name
+        self.data_items = []
 
 class Excel:
 
@@ -79,3 +80,5 @@ class Excel:
 
     def __init__(self, name):
         self.name = name
+        self.workbook = None
+        self.sheet_items = []

@@ -6,7 +6,6 @@ from model import weibodata
 import datetime
 import config
 import urllib2
-import json
 import time
 
 class Weibo:
@@ -18,11 +17,15 @@ class Weibo:
         for data_item in sheet_item.data_items:
             weibo_data = weibodata.WeiboData()
             weibo_data.name = data_item.bozhu_name
-
+            weibo_data.bozhu_excel_name = data_item.bozhu_excel_name
+            weibo_data.data_status = weibodata.WeiboData.DATA_STATUS_OK
             try:
-                #如果excel中的链接地址不为空，校验博主是否改名了，如果改名了就跳过这条博客。如果链接地址为空，根据博主名，查询链接地址：
+                #如果excel中的链接地址不为空，校验链接的有效性和博主是否改名了，如果改名了就跳过这条博客。如果链接地址为空，根据博主名，查询链接地址
                 if data_item.link.strip() != "":
                     weibo_data.home_url = data_item.link.strip()
+                    if not crawl.correct_weibo_head(weibo_data.home_url):
+                        weibo_data.data_status = weibodata.WeiboData.DATA_STATUS_URL_ERROR
+                        raise Exception, '微博链接失效，跳过该微博'
                 else:
                     html_contain_real_home_url = crawl.crawl_weibo(cls.__gen_name_url(data_item.bozhu_name))
                     #用户的微博主页地址
@@ -42,13 +45,15 @@ class Weibo:
                 #解析'微博'标签页中的数据，默认请求７天内的数据
                 weibo_data.latest_weibo = cls.__fetch_all_data(domain_id, user_id, real_weibo_url)
             except:
+                if weibo_data.data_status != weibodata.WeiboData.DATA_STATUS_OK:
+                    weibo_data.data_status = weibodata.WeiboData.DATA_STATUS_ERROR
                 weibo_data.latest_weibo = []
-                print "博主名为", data_item.bozhu_excel_name, "的微博信息获取失败，跳过该博客"
+                print data_item.bozhu_excel_name, "的微博信息获取失败，跳过该博客"
             else:
                 print weibo_data.name, weibo_data.home_url, len(weibo_data.latest_weibo)
 
             weibo_data_all.append(weibo_data)
-            time.sleep(2)
+            time.sleep(1)
 
         return weibo_data_all
 
@@ -270,20 +275,29 @@ class Weibo:
         curr_date = datetime.datetime.now()
         page_num = 1
         latest_weibo_data = []
-        while page_num < 10:
+        while True:
             if len(latest_weibo_data) > 0 and (curr_date - latest_weibo_data[len(latest_weibo_data) - 1].send_date).days > 7:
                 break;
             #生成第i页地址
             page_weibo_url = weibo_url + "&page=" + str(page_num)
-            #先解析页面上有的数据
-            latest_weibo_data = latest_weibo_data + cls.__fetch_latest_data(crawl.crawl_weibo(page_weibo_url))
-            #再发ajax请求, 解析第i页剩下的数据, 一共需要发2次ajax请求
-            first_ajax_html = crawl.crawl_weibo(cls.__first_roll_ajax_url(domain_id, page_num, 0, user_id))
-            second_ajax_html = crawl.crawl_weibo(cls.__first_roll_ajax_url(domain_id, page_num, 1, user_id))
-            first_ajax_data = cls.__fetch_latest_data(first_ajax_html)
-            second_ajax_data = cls.__fetch_latest_data(second_ajax_html)
-            latest_weibo_data = latest_weibo_data + first_ajax_data
-            latest_weibo_data = latest_weibo_data + second_ajax_data
+            #先检测微博页面地址是否正确
+            if crawl.correct_weibo_head(page_weibo_url):
+                try:
+                    #先解析页面上有的数据
+                    latest_weibo_data = latest_weibo_data + cls.__fetch_latest_data(crawl.crawl_weibo(page_weibo_url))
+                    #再发ajax请求, 解析第i页剩下的数据, 一共需要发2次ajax请求
+                    first_ajax_html = crawl.crawl_weibo(cls.__first_roll_ajax_url(domain_id, page_num, 0, user_id))
+                    second_ajax_html = crawl.crawl_weibo(cls.__first_roll_ajax_url(domain_id, page_num, 1, user_id))
+                    first_ajax_data = cls.__fetch_latest_data(first_ajax_html)
+                    second_ajax_data = cls.__fetch_latest_data(second_ajax_html)
+                    latest_weibo_data = latest_weibo_data + first_ajax_data
+                    latest_weibo_data = latest_weibo_data + second_ajax_data
+                except:
+                    raise Exception, '解析微博数据错误，跳过该微博'
+                    break
+            else:
+                raise Exception, '微博地址错误，跳过该微博'
+                break
 
             page_num = page_num + 1
         return latest_weibo_data
