@@ -18,5 +18,9 @@ if __name__ == "__main__":
     for sheet_item in excel_file.sheet_items:
         weibo_all_data = weibo.Weibo.fetch_weibo(sheet_item)
         excel.output_weibo_data(weibo_all_data, sheet_item, workbook)
+<<<<<<< HEAD
     workbook.save(OUTPUT_FILE)
+=======
+    workbook.save('result_' + datetime.now().strftime('%Y%m%d%H%M%S') + '.xlsx')
+>>>>>>> 81f9314df430a60b0e1c53768a8f31b04f59b701
     print '共耗时：', (datetime.now() - start_time).seconds / 60, '分钟'

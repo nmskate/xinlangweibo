@@ -18,13 +18,19 @@ class Weibo:
             weibo_data = weibodata.WeiboData()
             weibo_data.name = data_item.bozhu_name
             weibo_data.bozhu_excel_name = data_item.bozhu_excel_name
+<<<<<<< HEAD
             weibo_data.data_status = weibodata.WeiboData.DATA_STATUS_OK
+=======
+>>>>>>> 81f9314df430a60b0e1c53768a8f31b04f59b701
             try:
                 #如果excel中的链接地址不为空，校验链接的有效性和博主是否改名了，如果改名了就跳过这条博客。如果链接地址为空，根据博主名，查询链接地址
                 if data_item.link.strip() != "":
                     weibo_data.home_url = data_item.link.strip()
                     if not crawl.correct_weibo_head(weibo_data.home_url):
+<<<<<<< HEAD
                         weibo_data.data_status = weibodata.WeiboData.DATA_STATUS_URL_ERROR
+=======
+>>>>>>> 81f9314df430a60b0e1c53768a8f31b04f59b701
                         raise Exception, '微博链接失效，跳过该微博'
                 else:
                     html_contain_real_home_url = crawl.crawl_weibo(cls.__gen_name_url(data_item.bozhu_name))
@@ -293,10 +299,16 @@ class Weibo:
                     latest_weibo_data = latest_weibo_data + first_ajax_data
                     latest_weibo_data = latest_weibo_data + second_ajax_data
                 except:
+<<<<<<< HEAD
                     raise Exception, '解析微博数据错误，跳过该微博'
                     break
             else:
                 raise Exception, '微博地址错误，跳过该微博'
+=======
+                    print '解析微博数据错误，跳过该微博'
+            else:
+                print '微博地址错误，跳过该微博'
+>>>>>>> 81f9314df430a60b0e1c53768a8f31b04f59b701
                 break
 
             page_num = page_num + 1

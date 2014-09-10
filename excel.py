@@ -107,15 +107,21 @@ def output_weibo_data(weibo_data, excel_sheet, workbook):
 		ws.row(1).write(2, unicode('链接', 'utf-8'))
 		ws.row(1).write(3, unicode('粉丝数/万', 'utf-8'))
 		ws.row(1).write(4, unicode('平均转发数', 'utf-8'))
+<<<<<<< HEAD
 		ws.row(1).write(5, unicode('状态', 'utf-8'))
 		ws.row(1).write(6, unicode('状态码', 'utf-8'))
+=======
+>>>>>>> 81f9314df430a60b0e1c53768a8f31b04f59b701
 		ws.col(0).width = 2222
 		ws.col(1).width = 6666
 		ws.col(2).width = 9999
 		ws.col(3).width = 2222
 		ws.col(4).width = 3000
+<<<<<<< HEAD
 		ws.col(5).width = 4444
 		ws.col(6).width = 2222
+=======
+>>>>>>> 81f9314df430a60b0e1c53768a8f31b04f59b701
 		for index, item in enumerate(weibo_data):
 			weibo_num = 0
 			weibo_sum = 0
@@ -139,6 +145,7 @@ def output_weibo_data(weibo_data, excel_sheet, workbook):
 				ws.row(2 + index).write(4, weibo_sum / weibo_num)
 			else:
 				ws.row(2 + index).write(4, 0)
+<<<<<<< HEAD
 
 			if item.data_status == weibodata.WeiboData.DATA_STATUS_OK:
 				ws.row(2 + index).write(5, unicode('正常', 'utf-8'))
@@ -152,3 +159,5 @@ def output_weibo_data(weibo_data, excel_sheet, workbook):
 			else:
 				ws.row(2 + index).write(5, unicode('未知', 'utf-8'))
 				ws.row(2 + index).write(6, weibodata.WeiboData.DATA_STATUS_OK)
+=======
+>>>>>>> 81f9314df430a60b0e1c53768a8f31b04f59b701
