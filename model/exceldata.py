@@ -18,6 +18,9 @@ class ExcelItem:
     #粉丝数/万
     fensi_num = 0
 
+    #平均转发数
+    per_zhuanfa_num = 0
+
     #说明
     explain = ""
 
@@ -26,6 +29,9 @@ class ExcelItem:
 
     #直发
     zhifa = 0
+
+    #状态码
+    status_code = 0
 
 class SheetItem:
 
@@ -58,6 +64,12 @@ class SheetItem:
 
     #直发列号
     zhifa_index = 0
+
+    #状态列号
+    status_index = 0
+
+    #状态码列号
+    status_code_index = 0
 
     #数据
     data_items = []

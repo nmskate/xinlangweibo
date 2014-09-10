@@ -19,38 +19,44 @@ class Weibo:
             weibo_data.name = data_item.bozhu_name
             weibo_data.bozhu_excel_name = data_item.bozhu_excel_name
             weibo_data.data_status = weibodata.WeiboData.DATA_STATUS_OK
-            try:
-                #如果excel中的链接地址不为空，校验链接的有效性和博主是否改名了，如果改名了就跳过这条博客。如果链接地址为空，根据博主名，查询链接地址
-                if data_item.link.strip() != "":
-                    weibo_data.home_url = data_item.link.strip()
-                    if not crawl.correct_weibo_head(weibo_data.home_url):
-                        weibo_data.data_status = weibodata.WeiboData.DATA_STATUS_URL_ERROR
-                        raise Exception, '微博链接失效，跳过该微博'
-                else:
-                    html_contain_real_home_url = crawl.crawl_weibo(cls.__gen_name_url(data_item.bozhu_name))
-                    #用户的微博主页地址
-                    real_home_url = cls.__get_real_home_url(data_item.bozhu_name, html_contain_real_home_url)
-                    weibo_data.home_url = real_home_url
-
-                html_weibo_home = crawl.crawl_weibo(weibo_data.home_url)
-                weibo_data.guanzhu_num = cls.__get_home_guanzhu_num(html_weibo_home)
-                weibo_data.fensi_num = cls.__get_home_fensi_num(html_weibo_home)
-                weibo_data.weibo_num = cls.__get_home_weibo_num(html_weibo_home)
-                #微博主页中的'微博'标签页地址
-                real_weibo_url = cls.__get_real_weibo_url(html_weibo_home)
-
-                domain_id = cls.__get_domain_id_from_real_url(real_weibo_url)
-                user_id = cls.__get_user_id_from_real_url(real_weibo_url)
-
-                #解析'微博'标签页中的数据，默认请求７天内的数据
-                weibo_data.latest_weibo = cls.__fetch_all_data(domain_id, user_id, real_weibo_url)
-            except:
-                if weibo_data.data_status != weibodata.WeiboData.DATA_STATUS_OK:
-                    weibo_data.data_status = weibodata.WeiboData.DATA_STATUS_ERROR
-                weibo_data.latest_weibo = []
-                print data_item.bozhu_excel_name, "的微博信息获取失败，跳过该博客"
+            if data_item.status_code == weibodata.WeiboData.DATA_STATUS_OK:
+                weibo_data.home_url = data_item.link
+                weibo_data.per_zhuanfa_num = data_item.per_zhuanfa_num
+                weibo_data.fensi_num = int(data_item.fensi_num)
+                weibo_data.num = data_item.num
             else:
-                print weibo_data.name, weibo_data.home_url, len(weibo_data.latest_weibo)
+                try:
+                    #如果excel中的链接地址不为空，校验链接的有效性和博主是否改名了，如果改名了就跳过这条博客。如果链接地址为空，根据博主名，查询链接地址
+                    if data_item.link.strip() != "":
+                        weibo_data.home_url = data_item.link.strip()
+                        if not crawl.correct_weibo_head(weibo_data.home_url):
+                            weibo_data.data_status = weibodata.WeiboData.DATA_STATUS_URL_ERROR
+                            raise Exception, '微博链接失效，跳过该微博'
+                    else:
+                        html_contain_real_home_url = crawl.crawl_weibo(cls.__gen_name_url(data_item.bozhu_name))
+                        #用户的微博主页地址
+                        real_home_url = cls.__get_real_home_url(data_item.bozhu_name, html_contain_real_home_url)
+                        weibo_data.home_url = real_home_url
+
+                    html_weibo_home = crawl.crawl_weibo(weibo_data.home_url)
+                    weibo_data.guanzhu_num = cls.__get_home_guanzhu_num(html_weibo_home)
+                    weibo_data.fensi_num = cls.__get_home_fensi_num(html_weibo_home)
+                    weibo_data.weibo_num = cls.__get_home_weibo_num(html_weibo_home)
+                    #微博主页中的'微博'标签页地址
+                    real_weibo_url = cls.__get_real_weibo_url(html_weibo_home)
+
+                    domain_id = cls.__get_domain_id_from_real_url(real_weibo_url)
+                    user_id = cls.__get_user_id_from_real_url(real_weibo_url)
+
+                    #解析'微博'标签页中的数据，默认请求７天内的数据
+                    weibo_data.latest_weibo = cls.__fetch_all_data(domain_id, user_id, real_weibo_url)
+                except:
+                    if weibo_data.data_status != weibodata.WeiboData.DATA_STATUS_OK:
+                        weibo_data.data_status = weibodata.WeiboData.DATA_STATUS_ERROR
+                    weibo_data.latest_weibo = []
+                    print data_item.bozhu_excel_name, "的微博信息获取失败，跳过该博客"
+                else:
+                    print weibo_data.name, weibo_data.home_url, len(weibo_data.latest_weibo)
 
             weibo_data_all.append(weibo_data)
             time.sleep(1)
