@@ -6,7 +6,7 @@ import config
 
 '''私有函数, 抓取地址为url的数据'''
 def __crawl(url, user_agent, cookie):
-    return os.popen("http -b '" + url + "' User_Agent:'" + user_agent + "' Cookie:'" + cookie + "'").read()
+    return os.popen("http --check-status --timeout=2 -b '" + url + "' User_Agent:'" + user_agent + "' Cookie:'" + cookie + "'").read()
 
 '''抓取新浪微博数据'''
 def crawl_weibo(url):

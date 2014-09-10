@@ -7,40 +7,48 @@ import datetime
 import config
 import urllib2
 import json
+import time
 
 class Weibo:
 
     '''抓数据主函数'''
     @classmethod
-    def fetch_weibo(cls, names):
+    def fetch_weibo(cls, sheet_item):
         weibo_data_all = []
-        for name in names:
+        for data_item in sheet_item.data_items:
             weibo_data = weibodata.WeiboData()
-            weibo_data.name = name
+            weibo_data.name = data_item.bozhu_name
 
-            #微博名的搜索地址
-            name_url = cls.__gen_name_url(name)
-            html_contain_real_home_url = crawl.crawl_weibo(name_url)
+            try:
+                #如果excel中的链接地址不为空，校验博主是否改名了，如果改名了就跳过这条博客。如果链接地址为空，根据博主名，查询链接地址：
+                if data_item.link.strip() != "":
+                    weibo_data.home_url = data_item.link.strip()
+                else:
+                    html_contain_real_home_url = crawl.crawl_weibo(cls.__gen_name_url(data_item.bozhu_name))
+                    #用户的微博主页地址
+                    real_home_url = cls.__get_real_home_url(data_item.bozhu_name, html_contain_real_home_url)
+                    weibo_data.home_url = real_home_url
 
-            #用户的微博主页地址
-            real_home_url = cls.__get_real_home_url(name, html_contain_real_home_url)
-            weibo_data.home_url = real_home_url
+                html_weibo_home = crawl.crawl_weibo(weibo_data.home_url)
+                weibo_data.guanzhu_num = cls.__get_home_guanzhu_num(html_weibo_home)
+                weibo_data.fensi_num = cls.__get_home_fensi_num(html_weibo_home)
+                weibo_data.weibo_num = cls.__get_home_weibo_num(html_weibo_home)
+                #微博主页中的'微博'标签页地址
+                real_weibo_url = cls.__get_real_weibo_url(html_weibo_home)
 
-            html_weibo_home = crawl.crawl_weibo(real_home_url)
-            weibo_data.guanzhu_num = cls.__get_home_guanzhu_num(html_weibo_home)
-            weibo_data.fensi_num = cls.__get_home_fensi_num(html_weibo_home)
-            weibo_data.weibo_num = cls.__get_home_weibo_num(html_weibo_home)
-            #微博主页中的'微博'标签页地址
-            real_weibo_url = cls.__get_real_weibo_url(html_weibo_home)
+                domain_id = cls.__get_domain_id_from_real_url(real_weibo_url)
+                user_id = cls.__get_user_id_from_real_url(real_weibo_url)
 
-            domain_id = cls.__get_domain_id_from_real_url(real_weibo_url)
-            user_id = cls.__get_user_id_from_real_url(real_weibo_url)
-
-            #解析'微博'标签页中的数据，默认请求７天内的数据
-            weibo_data.latest_weibo = cls.__fetch_all_data(domain_id, user_id, real_weibo_url)
+                #解析'微博'标签页中的数据，默认请求７天内的数据
+                weibo_data.latest_weibo = cls.__fetch_all_data(domain_id, user_id, real_weibo_url)
+            except:
+                weibo_data.latest_weibo = []
+                print "博主名为", data_item.bozhu_excel_name, "的微博信息获取失败，跳过该博客"
+            else:
+                print weibo_data.name, weibo_data.home_url, len(weibo_data.latest_weibo)
 
             weibo_data_all.append(weibo_data)
-            print weibo_data.name, weibo_data.home_url, len(weibo_data.latest_weibo)
+            time.sleep(2)
 
         return weibo_data_all
 
@@ -262,7 +270,7 @@ class Weibo:
         curr_date = datetime.datetime.now()
         page_num = 1
         latest_weibo_data = []
-        while True:
+        while page_num < 10:
             if len(latest_weibo_data) > 0 and (curr_date - latest_weibo_data[len(latest_weibo_data) - 1].send_date).days > 7:
                 break;
             #生成第i页地址
