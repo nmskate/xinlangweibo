@@ -56,7 +56,7 @@ def read_excel_file(input_file_name):
 			if index >= 2 and sheet.cell(index, sheet_item.num_index).value != '':
 				num = str(sheet.cell(index, sheet_item.num_index).value).encode('utf-8').strip()
 				bozhu_name = sheet.cell(index, sheet_item.bozhu_name_index).value.encode('utf-8').strip()
-				link = sheet.cell(index, sheet_item.link_index).value.encode('utf-8').strip()
+				link = sheet.cell(index, sheet_item.link_index).value.encode('utf-8').strip().replace('e.weibo.com', 'weibo.com')
 
 				try:
 					fensi_num = str(sheet.cell(index, sheet_item.fensi_num_index).value).encode('utf-8').strip()
