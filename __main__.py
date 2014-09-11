@@ -6,8 +6,8 @@ import excel
 from xlwt import Workbook
 from datetime import datetime
 
-INPUT_FILE = '''xml.xlsx'''
-OUTPUT_FILE = 'result_' + datetime.now().strftime('%Y%m%d%H%M%S') + '.xlsx'
+INPUT_FILE = '''xml.xls'''
+OUTPUT_FILE = 'result_' + datetime.now().strftime('%Y%m%d%H%M%S') + '.xls'
 
 if __name__ == "__main__":
     start_time = datetime.now()

@@ -3,6 +3,7 @@
 
 import datetime
 import xlrd
+import sys
 from model import weibodata
 from model.exceldata import Excel, SheetItem, ExcelItem
 
