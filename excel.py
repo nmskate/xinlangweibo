@@ -8,7 +8,7 @@ from model import weibodata
 from model.exceldata import Excel, SheetItem, ExcelItem
 
 '''允许的列名'''
-ALLOW_COLUMNS = ["序号", "类型", "博主", "账号名称", "链接", "粉丝数/万", "粉丝/万", "平均转发数", "说明", "转发/元", "转发", "直发/元", "直发", "推荐级别"]
+ALLOW_COLUMNS = ["序号", "类型", "博主", "账号名称", "链接", "粉丝数/万", "粉丝/万", "平均转发数", "说明", "转发/元", "转发", "直发/元", "直发", "推荐级别", "状态", "状态码"]
 
 '''检查输入文件格式是否正确, 正确返回文件, 错误退出. 参数中的excel是exceldata.Excel类型'''
 def __check_input_file(excel):
@@ -51,6 +51,10 @@ def read_excel_file(input_file_name):
 				sheet_item.zhuanfa_index = cur_index
 			if ["直发/元", "直发"].count(name.encode('utf-8').replace(' ', '')) == 1:
 				sheet_item.zhifa_index = cur_index
+			if ["状态"].count(name.encode('utf-8').replace(' ', '')) == 1:
+				sheet_item.status_index = cur_index
+			if ["状态码"].count(name.encode('utf-8').replace(' ', '')) == 1:
+				sheet_item.status_code_index = cur_index
 			cur_index += 1
 
 		for index in range(sheet.nrows):
@@ -78,9 +82,17 @@ def read_excel_file(input_file_name):
 				except:
 					zhuanfa = '-1'
 				try:
+					per_zhuanfa_num = str(sheet.cell(index, sheet_item.per_zhuanfa_index).value).encode('utf-8').strip()
+				except:
+					per_zhuanfa_num = '-1'
+				try:
 					zhifa = str(sheet.cell(index, sheet_item.zhifa_index).value).encode('utf-8').strip()
 				except:
 					zhifa = '-1'
+				try:
+					status_code = str(sheet.cell(index, sheet_item.status_code_index).value).encode('utf-8').strip()
+				except:
+					status_code = '0'
 
 				excel_data_item.num = int(float(num)) if num != "" else 0
 				excel_data_item.bozhu_excel_name = bozhu_name
@@ -88,8 +100,10 @@ def read_excel_file(input_file_name):
 				excel_data_item.link = link
 				excel_data_item.fensi_num = round(float("%.2f" % float(fensi_num)), 1)
 				excel_data_item.explain = explain
+				excel_data_item.per_zhuanfa_num = int(float(per_zhuanfa_num)) if per_zhuanfa_num != "" else 0
 				excel_data_item.zhuanfa = int(float(zhuanfa)) if zhuanfa != "" else 0
 				excel_data_item.zhifa = int(float(zhifa)) if zhifa != "" else 0
+				excel_data_item.status_code = int(float(status_code)) if num != "" else 0
 
 				sheet_item.data_items.append(excel_data_item)
 
@@ -120,11 +134,16 @@ def output_weibo_data(weibo_data, excel_sheet, workbook):
 		for index, item in enumerate(weibo_data):
 			weibo_num = 0
 			weibo_sum = 0
-			for weibo in item.latest_weibo:
-				tmp_date = datetime.datetime.strptime(weibo.send_date.strftime('%Y-%m-%d'), "%Y-%m-%d")
-				if (now - tmp_date).days > 0 and (now - tmp_date).days <= 4 and weibo.zhuanfa_num >= 10:
-					weibo_num += 1
-					weibo_sum += weibo.zhuanfa_num
+
+			if item.per_zhuanfa_num > 0:
+				weibo_num = 1
+				weibo_sum = item.per_zhuanfa_num
+			else:
+				for weibo in item.latest_weibo:
+					tmp_date = datetime.datetime.strptime(weibo.send_date.strftime('%Y-%m-%d'), "%Y-%m-%d")
+					if (now - tmp_date).days > 0 and (now - tmp_date).days <= 7 and weibo.zhuanfa_num >= 10:
+						weibo_num += 1
+						weibo_sum += weibo.zhuanfa_num
 
 			ws.row(2 + index).write(0, 1 + index)
 
@@ -134,14 +153,14 @@ def output_weibo_data(weibo_data, excel_sheet, workbook):
 			if item.home_url.strip() != "":
 				ws.row(2 + index).write(2, unicode(item.home_url, 'utf-8'))
 
-			ws.row(2 + index).write(3, int(round((item.fensi_num * 1.0) / 10000)))
+			ws.row(2 + index).write(3, item.fensi_num if item.per_zhuanfa_num > 0 else int(round((item.fensi_num * 1.0) / 10000)))
 
 			if weibo_num != 0:
 				ws.row(2 + index).write(4, weibo_sum / weibo_num)
 			else:
 				ws.row(2 + index).write(4, 0)
 
-			if item.data_status == weibodata.WeiboData.DATA_STATUS_OK:
+			if item.data_status == weibodata.WeiboData.DATA_STATUS_OK and weibo_sum > 0:
 				ws.row(2 + index).write(5, unicode('正常', 'utf-8'))
 				ws.row(2 + index).write(6, item.data_status)
 			elif item.data_status == weibodata.WeiboData.DATA_STATUS_URL_ERROR:
@@ -151,5 +170,5 @@ def output_weibo_data(weibo_data, excel_sheet, workbook):
 				ws.row(2 + index).write(5, unicode('错误', 'utf-8'))
 				ws.row(2 + index).write(6, item.data_status)
 			else:
-				ws.row(2 + index).write(5, unicode('未知', 'utf-8'))
-				ws.row(2 + index).write(6, weibodata.WeiboData.DATA_STATUS_OK)
+				ws.row(2 + index).write(5, unicode('数据错误', 'utf-8'))
+				ws.row(2 + index).write(6, weibodata.WeiboData.DATA_STATUS_ERROR)

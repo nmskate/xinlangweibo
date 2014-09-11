@@ -52,6 +52,12 @@ class WeiboData:
     #微博数
     weibo_num = 0
 
+    #平均转发数
+    per_zhuanfa_num = 0
+
+    #序号
+    num = 0
+
     #该微博的状态
     data_status = DATA_STATUS_OK
 
