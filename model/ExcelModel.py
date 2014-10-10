@@ -1,0 +1,91 @@
+#!/usr/bin/env python
+#coding=utf-8
+
+__author__ = 'zero.liu'
+
+
+class Row:
+    def __init__(self):
+        #序号
+        self.sequence = 0
+
+        #博主名
+        self.blogger_real_name = ""
+
+        #excel中的博主名，有些博主名后面会有一个V
+        self.blogger_excel_name = ""
+
+        #链接
+        self.link = ""
+
+        #粉丝数/万
+        self.fans_num = 0
+
+        #平均转发数
+        self.forward_num_avg = 0
+
+        #说明
+        self.explain = ""
+
+        #转发
+        self.forward_price = 0
+
+        #直发
+        self.direct_send_price = 0
+
+        #状态码
+        self.status_code = 0
+
+
+class Sheet:
+    def __init__(self, sequence, name):
+        #第几个sheet
+        self.sequence = sequence
+
+        #sheel名
+        self.name = name
+
+        #数据
+        self.rows = []
+
+        #序号在第几列
+        self.sequence_index = 0
+
+        #博主名在第几列
+        self.blogger_name_index = 0
+
+        #链接在第几列
+        self.link_index = 0
+
+        #粉丝数/万在第几列
+        self.fans_num_index = 0
+
+        #平均转发数在第几列
+        self.forward_num_avg_index = 0
+
+        #说明在第几列
+        self.explain_index = 0
+
+        #转发在第几列
+        self.forward_price_index = 0
+
+        #直发在第几列
+        self.direct_send_price_index = 0
+
+        #状态在第几列
+        self.status_index = 0
+
+        #状态码在第几列
+        self.status_code_index = 0
+
+
+class Excel:
+    def __init__(self, name):
+        #文件名
+        self.name = name
+
+        #excel workbook
+        self.workbook = None
+
+        #sheels
+        self.sheets = []

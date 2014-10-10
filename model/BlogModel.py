@@ -1,30 +1,23 @@
 #!/usr/bin/env python
 #coding=utf-8
 
-class WeiboItem:
+__author__ = 'zero.liu'
 
-    SEND_TYPE_WEIBO = 1
-    SEND_TYPE_ANDRIOD = 2
-    SEND_TYPE_IPHNOE_5S = 3
-    SEND_TYPE_IPHNOE = 4
-    SEND_TYPE_360BROWSER = 11
-    SEND_TYPE_SOUGOUBROWSER = 12
-    SEND_TYPE_SHOWONE = 21
 
-    #点赞数
-    zan_num = 0
+class MicroBlog:
+    def __init__(self):
+        #点赞数
+        self.praise_num = 0
 
-    #发表时间
-    send_date = ""
+        #发表时间
+        self.send_date = None
 
-    #转发数
-    zhuanfa_num = 0
+        #转发数
+        self.forward_num = 0
 
-    #评论数
-    pinglun_num = 0
+        #评论数
+        self.comment_num = 0
 
-    #发表方式, 0代表weibo, 1代表Andriod客户端, 2代表ios客户端
-    send_type = SEND_TYPE_WEIBO
 
 class WeiboData:
 
