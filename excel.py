@@ -1,128 +1,152 @@
 #!/usr/bin/env python
 # coding=utf-8
 
+__author__ = 'zero.liu'
+
 import datetime
-import xlrd
 import sys
-from model import BlogModel
-from model.ExcelModel import Excel, SheetItem, ExcelItem
-
-#允许的列名
-ALLOW_COLUMNS = ["序号", "类型", "博主", "账号名称", "链接", "粉丝数/万", "粉丝/万", "平均转发数", "说明", "转发/元", "转发", "直发/元", "直发", "推荐级别",
-                 "状态", "状态码"]
+from utils import StringUtil
+from model import MicroBlogModel
+from model.ExcelModel import Excel, Sheet, Row
 
 
-#检查输入文件格式是否正确, 正确返回文件, 错误退出. 参数中的excel是exceldata.Excel类型
-def __check_input_file(excel):
-    flag = True
-    excel.workbook = xlrd.open_workbook(excel.name)
-    for sheet in excel.workbook.sheets():
-        for name in sheet.row_values(1):
-            if ALLOW_COLUMNS.count(name.encode('utf-8').replace(' ', '')) == 0:
-                flag = False
-                print "包含有不合法的列名 --- sheet名(", sheet.name, "), 列名(", name.encode('utf-8'), ")"
-                print '''仅允许的列名 --- 序号, 类型, 博主, 账号名称, 链接, 粉丝数/万, 粉丝/万, 平均转发数, 说明, 转发/元, 转发, 直发/元, 直发, 推荐级别'''
-        if not flag:
-            sys.exit(1)
-        else:
-            return excel
+# 允许的列名
+ALLOW_COLUMNS = ("序号", "类型", "博主", "账号名称", "链接", "粉丝数/万", "粉丝/万", "平均转发数",
+                 "说明", "转发/元", "转发", "直发/元", "直发", "推荐级别", "状态", "状态码")
 
 
-#获取excel, 并解析出excel中的数据, 返回exceldata.Excel类型
+# 获取excel, 并解析出excel中的数据, 返回ExcelModel.Excel类型
 def read_excel_file(input_file_name):
-    excel = __check_input_file(Excel(input_file_name))
+    excel = __check_excel_file(input_file_name)
 
     cur_sheet_index = 0
-    for sheet in excel.workbook.sheets():
-        sheet_item = SheetItem(cur_sheet_index, sheet.name)
+    for workbook_sheet in excel.workbook.sheets():
+        sheet = Sheet(cur_sheet_index, workbook_sheet.name)
 
-        cur_index = 0
-        for name in sheet.row_values(1):
-            if ["序号"].count(name.encode('utf-8').replace(' ', '')) == 1:
-                sheet_item.num_index = cur_index
-            if ["博主", "账号名称"].count(name.encode('utf-8').replace(' ', '')) == 1:
-                sheet_item.bozhu_name_index = cur_index
-            if ["链接"].count(name.encode('utf-8').replace(' ', '')) == 1:
-                sheet_item.link_index = cur_index
-            if ["粉丝数/万", "粉丝/万"].count(name.encode('utf-8').replace(' ', '')) == 1:
-                sheet_item.fensi_num_index = cur_index
-            if ["平均转发数"].count(name.encode('utf-8').replace(' ', '')) == 1:
-                sheet_item.per_zhuanfa_index = cur_index
-            if ["说明"].count(name.encode('utf-8').replace(' ', '')) == 1:
-                sheet_item.explain_index = cur_index
-            if ["转发/元", "转发"].count(name.encode('utf-8').replace(' ', '')) == 1:
-                sheet_item.zhuanfa_index = cur_index
-            if ["直发/元", "直发"].count(name.encode('utf-8').replace(' ', '')) == 1:
-                sheet_item.zhifa_index = cur_index
-            if ["状态"].count(name.encode('utf-8').replace(' ', '')) == 1:
-                sheet_item.status_index = cur_index
-            if ["状态码"].count(name.encode('utf-8').replace(' ', '')) == 1:
-                sheet_item.status_code_index = cur_index
-            cur_index += 1
+        sheet = __locate_col_index(sheet, workbook_sheet)
 
-        for index in range(sheet.nrows):
-            excel_data_item = ExcelItem()
+        for index in range(workbook_sheet.nrows):
+            if index >= 2:
+                row = Row()
 
-            if index >= 2 and sheet.cell(index, sheet_item.num_index).value != '':
-                num = str(sheet.cell(index, sheet_item.num_index).value).encode('utf-8').strip()
-                bozhu_name = sheet.cell(index, sheet_item.bozhu_name_index).value.encode('utf-8').strip()
-                link = sheet.cell(index, sheet_item.link_index).value.encode('utf-8').strip().replace('e.weibo.com', 'weibo.com')
+                # 序号，重排序号
+                row.sequence = index - 2 + 1
 
-                try:
-                    fensi_num = str(sheet.cell(index, sheet_item.fensi_num_index).value).encode('utf-8').strip()
-                    fensi_num = fensi_num[0: len(fensi_num) - 1] if fensi_num != "" and fensi_num.endswith(
-                        'W') else fensi_num
-                    fensi_num = fensi_num[0: len(fensi_num) - 1] if fensi_num != "" and fensi_num.endswith(
-                        'w') else fensi_num
-                except:
-                    fensi_num = sheet.cell(index, sheet_item.fensi_num_index).value.encode('utf-8').strip()
-                    fensi_num = fensi_num[0: fensi_num.find('万')] if fensi_num != "" and fensi_num.endswith('万') else fensi_num
-                fensi_num = 0 if fensi_num == '' else fensi_num
-                try:
-                    explain = sheet.cell(index, sheet_item.explain_index).value.encode('utf-8').strip()
-                except:
-                    explain = ''
-                try:
-                    zhuanfa = str(sheet.cell(index, sheet_item.zhuanfa_index).value).encode('utf-8').strip()
-                except:
-                    zhuanfa = '-1'
-                try:
-                    per_zhuanfa_num = str(sheet.cell(index, sheet_item.per_zhuanfa_index).value).encode('utf-8').strip()
-                except:
-                    per_zhuanfa_num = '-1'
-                try:
-                    zhifa = str(sheet.cell(index, sheet_item.zhifa_index).value).encode('utf-8').strip()
-                except:
-                    zhifa = '-1'
-                try:
-                    status_code = str(sheet.cell(index, sheet_item.status_code_index).value).encode('utf-8').strip()
-                except:
-                    status_code = '0'
+                # 博主名
+                if sheet.blogger_name_index >= 0:
+                    blogger_excel_name = str(workbook_sheet.cell(index, sheet.blogger_name_index).value).strip()
+                    blogger_real_name = blogger_excel_name
+                    if blogger_excel_name != "" and blogger_excel_name.endswith('V'):
+                        blogger_real_name = blogger_excel_name[0: len(blogger_excel_name) - 1]
+                    row.blogger_excel_name = StringUtil.strip_blank(blogger_excel_name)
+                    row.blogger_real_name = StringUtil.strip_blank(blogger_real_name)
 
-                excel_data_item.num = int(float(num)) if num != "" else 0
-                excel_data_item.bozhu_excel_name = bozhu_name
-                excel_data_item.bozhu_name = bozhu_name[0: len(bozhu_name) - 1] if bozhu_name != "" and bozhu_name.endswith('V') else bozhu_name
-                excel_data_item.link = link
-                excel_data_item.fensi_num = round(float("%.2f" % float(fensi_num)), 1)
-                excel_data_item.explain = explain
-                excel_data_item.per_zhuanfa_num = int(float(per_zhuanfa_num)) if per_zhuanfa_num != "" else 0
-                excel_data_item.zhuanfa = int(float(zhuanfa)) if zhuanfa != "" else 0
-                excel_data_item.zhifa = int(float(zhifa)) if zhifa != "" else 0
-                excel_data_item.status_code = int(float(status_code)) if num != "" else 0
+                # 链接
+                if sheet.link_index >= 0:
+                    link = str(workbook_sheet.cell(index, sheet.link_index).value).strip()
+                    row.link = StringUtil.strip_blank(link.replace('e.weibo.com', 'weibo.com'))
 
-                sheet_item.data_items.append(excel_data_item)
+                # 粉丝数/万
+                if sheet.fans_num_index >= 0:
+                    fans_num = str(workbook_sheet.cell(index, sheet.fans_num_index).value).strip()
+                    fans_num = StringUtil.convert_to_float(fans_num)
+                    row.fans_num = round(float("%.2f" % float(fans_num)), 1)
 
-        excel.sheet_items.append(sheet_item)
+                # 平均转发数
+                if sheet.forward_num_avg_index >= 0:
+                    forward_num_avg = str(workbook_sheet.cell(index, sheet.forward_num_avg_index).value).strip()
+                    row.forward_num_avg = StringUtil.convert_to_int(forward_num_avg, '-1')
+
+                # 说明
+                if sheet.explain_index >= 0:
+                    explain = str(workbook_sheet.cell(index, sheet.explain_index).value).strip()
+                    row.explain = StringUtil.strip_blank(explain)
+
+                # 转发
+                if sheet.forward_price_index >= 0:
+                    forward_price = str(workbook_sheet.cell(index, sheet.forward_price_index).value).strip()
+                    row.forward_price = StringUtil.convert_to_int(forward_price, '-1')
+
+                # 直发
+                if sheet.direct_send_price_index >= 0:
+                    direct_send_price = str(workbook_sheet.cell(index, sheet.direct_send_price_index).value).strip()
+                    row.direct_send_price = StringUtil.convert_to_int(direct_send_price, '-1')
+
+                #推荐级别
+                if sheet.recommend_level_index >= 0:
+                    recommend_level = str(workbook_sheet.cell(index, sheet.recommend_level_index).value).strip()
+                    row.recommend_level = StringUtil.strip_blank(recommend_level)
+
+                # 状态码
+                if sheet.status_code_index >= 0:
+                    status_code = str(workbook_sheet.cell(index, sheet.status_code_index).value).strip()
+                    row.status_code = StringUtil.convert_to_int(status_code)
+
+                sheet.rows.append(row)
+
+        excel.sheets.append(sheet)
         cur_sheet_index += 1
 
     return excel
 
 
-#生成excel表格，默认取前4天的数据
-def output_weibo_data(weibo_data, excel_sheet, workbook):
+# 检查输入文件格式是否正确, 正确返回文件, 错误退出
+def __check_excel_file(excel_file_name):
+    excel = Excel(excel_file_name)
+    if isinstance(excel.workbook, type(None)):
+        print(excel_file_name, '不存在，程序退出')
+        sys.exit(0)
+
+    flag = True
+    for sheet in excel.workbook.sheets():
+        for name in sheet.row_values(1):
+            if ALLOW_COLUMNS.count(name.replace(' ', '')) == 0:
+                flag = False
+                print("包含有不合法的列名 --- sheet名(", sheet.name, "), 列名(", name.encode('utf-8'), ")")
+                print('仅允许的列名 --- 序号, 类型, 博主, 账号名称, 链接, 粉丝数/万, 粉丝/万, 平均转发数, 说明, 转发/元, 转发, 直发/元, 直发, 推荐级别')
+        if not flag:
+            sys.exit(0)
+        else:
+            return excel
+
+
+# 定位sheet中序号, 类型, 博主等等列所在的序号，其中sheet表示ExcelModel.Sheet、workbook_sheet表示workbook.sheets()中的每一个sheet
+def __locate_col_index(sheet, workbook_sheet):
+    cur_column = 0
+    for name in workbook_sheet.row_values(1):
+        name = StringUtil.strip_blank(name)
+        if ["序号"].count(name) == 1:
+            sheet.sequence_index = cur_column
+        if ["博主", "账号名称"].count(name) == 1:
+            sheet.blogger_name_index = cur_column
+        if ["链接"].count(name) == 1:
+            sheet.link_index = cur_column
+        if ["粉丝数/万", "粉丝/万"].count(name) == 1:
+            sheet.fans_num_index = cur_column
+        if ["平均转发数"].count(name) == 1:
+            sheet.forward_num_avg_index = cur_column
+        if ["说明"].count(name) == 1:
+            sheet.explain_index = cur_column
+        if ["转发/元", "转发"].count(name) == 1:
+            sheet.forward_price_index = cur_column
+        if ["直发/元", "直发"].count(name) == 1:
+            sheet.direct_send_price_index = cur_column
+        if ["推荐级别"].count(name) == 1:
+            sheet.recommend_level_index = cur_column
+        if ["状态"].count(name) == 1:
+            sheet.status_index = cur_column
+        if ["状态码"].count(name) == 1:
+            sheet.status_code_index = cur_column
+        cur_column += 1
+
+    return sheet
+
+
+# 生成excel表格，默认取前7天的数据
+def write_excel_file(weibo_data, sheet_name, workbook):
     now = datetime.datetime.strptime(datetime.datetime.now().strftime('%Y-%m-%d'), "%Y-%m-%d")
     if weibo_data is not None and len(weibo_data) > 0:
-        ws = workbook.add_sheet(excel_sheet.name)
+        ws = workbook.add_sheet(sheet_name)
         ws.row(1).write(0, unicode('序号', 'utf-8'))
         ws.row(1).write(1, unicode('博主', 'utf-8'))
         ws.row(1).write(2, unicode('链接', 'utf-8'))
@@ -167,15 +191,15 @@ def output_weibo_data(weibo_data, excel_sheet, workbook):
             else:
                 ws.row(2 + index).write(4, 0)
 
-            if item.data_status == BlogModel.WeiboData.DATA_STATUS_OK and weibo_sum > 0:
+            if item.data_status == MicroBlogModel.MicroBlogHome.DATA_STATUS_OK and weibo_sum > 0:
                 ws.row(2 + index).write(5, unicode('正常', 'utf-8'))
                 ws.row(2 + index).write(6, item.data_status)
-            elif item.data_status == BlogModel.WeiboData.DATA_STATUS_URL_ERROR:
+            elif item.data_status == MicroBlogModel.MicroBlogHome.DATA_STATUS_URL_ERROR:
                 ws.row(2 + index).write(5, unicode('链接错误', 'utf-8'))
                 ws.row(2 + index).write(6, item.data_status)
-            elif item.data_status == BlogModel.WeiboData.DATA_STATUS_ERROR:
+            elif item.data_status == MicroBlogModel.MicroBlogHome.DATA_STATUS_ERROR:
                 ws.row(2 + index).write(5, unicode('错误', 'utf-8'))
                 ws.row(2 + index).write(6, item.data_status)
             else:
                 ws.row(2 + index).write(5, unicode('数据错误', 'utf-8'))
-                ws.row(2 + index).write(6, BlogModel.WeiboData.DATA_STATUS_ERROR)
+                ws.row(2 + index).write(6, MicroBlogModel.MicroBlogHome.DATA_STATUS_ERROR)

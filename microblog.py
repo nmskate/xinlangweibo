@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-from utils import crawl
-from model import BlogModel
+from utils import HttpUtil
+from model import MicroBlogModel
 import datetime
 import config
 import urllib2
@@ -13,11 +13,11 @@ import time
 def fetch_weibo(sheet_item):
     weibo_data_all = []
     for data_item in sheet_item.data_items:
-        weibo_data = BlogModel.WeiboData()
+        weibo_data = MicroBlogModel.MicroBlogHome()
         weibo_data.name = data_item.bozhu_name
         weibo_data.bozhu_excel_name = data_item.bozhu_excel_name
-        weibo_data.data_status = BlogModel.WeiboData.DATA_STATUS_OK
-        if data_item.status_code == BlogModel.WeiboData.DATA_STATUS_OK:
+        weibo_data.data_status = MicroBlogModel.MicroBlogHome.DATA_STATUS_OK
+        if data_item.status_code == MicroBlogModel.MicroBlogHome.DATA_STATUS_OK:
             weibo_data.home_url = data_item.link
             weibo_data.per_zhuanfa_num = data_item.per_zhuanfa_num
             weibo_data.fensi_num = int(data_item.fensi_num)
@@ -27,16 +27,16 @@ def fetch_weibo(sheet_item):
                 #如果excel中的链接地址不为空，校验链接的有效性和博主是否改名了，如果改名了就跳过这条博客。如果链接地址为空，根据博主名，查询链接地址
                 if data_item.link.strip() != "":
                     weibo_data.home_url = data_item.link.strip()
-                    if not crawl.correct_weibo_head(weibo_data.home_url):
-                        weibo_data.data_status = BlogModel.WeiboData.DATA_STATUS_URL_ERROR
+                    if not HttpUtil.correct_weibo_head(weibo_data.home_url):
+                        weibo_data.data_status = MicroBlogModel.MicroBlogHome.DATA_STATUS_URL_ERROR
                         raise Exception, '微博链接失效，跳过该微博'
                 else:
-                    html_contain_real_home_url = crawl.crawl_weibo(__gen_name_url(data_item.bozhu_name))
+                    html_contain_real_home_url = HttpUtil.crawl_weibo(__gen_name_url(data_item.bozhu_name))
                     #用户的微博主页地址
                     real_home_url = __get_real_home_url(data_item.bozhu_name, html_contain_real_home_url)
                     weibo_data.home_url = real_home_url
 
-                html_weibo_home = crawl.crawl_weibo(weibo_data.home_url)
+                html_weibo_home = HttpUtil.crawl_weibo(weibo_data.home_url)
                 weibo_data.guanzhu_num = __get_home_guanzhu_num(html_weibo_home)
                 weibo_data.fensi_num = __get_home_fensi_num(html_weibo_home)
                 weibo_data.weibo_num = __get_home_weibo_num(html_weibo_home)
@@ -49,8 +49,8 @@ def fetch_weibo(sheet_item):
                 #解析'微博'标签页中的数据，默认请求７天内的数据
                 weibo_data.latest_weibo = __fetch_all_data(domain_id, user_id, real_weibo_url)
             except:
-                if weibo_data.data_status != BlogModel.WeiboData.DATA_STATUS_OK:
-                    weibo_data.data_status = BlogModel.WeiboData.DATA_STATUS_ERROR
+                if weibo_data.data_status != MicroBlogModel.MicroBlogHome.DATA_STATUS_OK:
+                    weibo_data.data_status = MicroBlogModel.MicroBlogHome.DATA_STATUS_ERROR
                 weibo_data.latest_weibo = []
                 print data_item.bozhu_excel_name, "的微博信息获取失败，跳过该博客"
             else:
@@ -127,7 +127,7 @@ def __fetch_latest_data(html_weibo):
         div_index_end = html_weibo.find('>', start)
         feedtype_index = html_weibo.find('feedtype', div_index_start, div_index_end)
         if feedtype_index < 0:
-            weibo_item = BlogModel.WeiboItem()
+            weibo_item = MicroBlogModel.WeiboItem()
             next_start = html_weibo.find('WB_feed_type SW_fun S_line2', start + 1)
             next_start = next_start if next_start > 0 else len(html_weibo)
 
@@ -186,19 +186,19 @@ def __fetch_latest_data(html_weibo):
             send_type_start = html_weibo.rfind('>', send_type_start, send_type_end)
             send_type = html_weibo[send_type_start + 1:send_type_end].strip()
             if send_type.find('Android') >= 0:
-                weibo_item.send_type = BlogModel.WeiboItem.SEND_TYPE_ANDRIOD
+                weibo_item.send_type = MicroBlogModel.WeiboItem.SEND_TYPE_ANDRIOD
             elif send_type.find('weibo') >= 0:
-                weibo_item.send_type = BlogModel.WeiboItem.SEND_TYPE_WEIBO
+                weibo_item.send_type = MicroBlogModel.WeiboItem.SEND_TYPE_WEIBO
             elif send_type.find('360安全浏览器') >= 0:
-                weibo_item.send_type = BlogModel.WeiboItem.SEND_TYPE_360BROWSER
+                weibo_item.send_type = MicroBlogModel.WeiboItem.SEND_TYPE_360BROWSER
             elif send_type.find('搜狗高速浏览器') >= 0:
-                weibo_item.send_type = BlogModel.WeiboItem.SEND_TYPE_SOUGOUBROWSER
+                weibo_item.send_type = MicroBlogModel.WeiboItem.SEND_TYPE_SOUGOUBROWSER
             elif send_type.find('iPhone 5s') >= 0:
-                weibo_item.send_type = BlogModel.WeiboItem.SEND_TYPE_IPHNOE_5S
+                weibo_item.send_type = MicroBlogModel.WeiboItem.SEND_TYPE_IPHNOE_5S
             elif send_type.find('iPhone') >= 0:
-                weibo_item.send_type = BlogModel.WeiboItem.SEND_TYPE_IPHNOE
+                weibo_item.send_type = MicroBlogModel.WeiboItem.SEND_TYPE_IPHNOE
             elif send_type.find('定时showone') >= 0:
-                weibo_item.send_type = BlogModel.WeiboItem.SEND_TYPE_SHOWONE
+                weibo_item.send_type = MicroBlogModel.WeiboItem.SEND_TYPE_SHOWONE
 
             latest_weibo.append(weibo_item)
 
@@ -281,13 +281,13 @@ def __fetch_all_data(domain_id, user_id, weibo_url):
         #生成第i页地址
         page_weibo_url = weibo_url + "&page=" + str(page_num)
         #先检测微博页面地址是否正确
-        if crawl.correct_weibo_head(page_weibo_url):
+        if HttpUtil.correct_weibo_head(page_weibo_url):
             try:
                 #先解析页面上有的数据
-                latest_weibo_data = latest_weibo_data + __fetch_latest_data(crawl.crawl_weibo(page_weibo_url))
+                latest_weibo_data = latest_weibo_data + __fetch_latest_data(HttpUtil.crawl_weibo(page_weibo_url))
                 #再发ajax请求, 解析第i页剩下的数据, 一共需要发2次ajax请求
-                first_ajax_html = crawl.crawl_weibo(__first_roll_ajax_url(domain_id, page_num, 0, user_id))
-                second_ajax_html = crawl.crawl_weibo(__first_roll_ajax_url(domain_id, page_num, 1, user_id))
+                first_ajax_html = HttpUtil.crawl_weibo(__first_roll_ajax_url(domain_id, page_num, 0, user_id))
+                second_ajax_html = HttpUtil.crawl_weibo(__first_roll_ajax_url(domain_id, page_num, 1, user_id))
                 first_ajax_data = __fetch_latest_data(first_ajax_html)
                 second_ajax_data = __fetch_latest_data(second_ajax_html)
                 latest_weibo_data = latest_weibo_data + first_ajax_data

@@ -1,22 +1,35 @@
 #!/usr/bin/env python
 #coding=utf-8
 
-import weibo
+__author__ = 'zero.liu'
+
+import microblog
 import excel
-from xlwt import Workbook
+from collections import OrderedDict
+from xlwt3 import Workbook
 from datetime import datetime
+
 
 INPUT_FILE = 'xml.xls'
 OUTPUT_FILE = 'result_' + datetime.now().strftime('%Y%m%d%H%M%S') + '.xls'
 
+
 if __name__ == '__main__':
+    #程序开始时间
     start_time = datetime.now()
-    #存放原始数据的excel文件
+
+    # 存放原始数据的excel文件
     excel_file = excel.read_excel_file(INPUT_FILE)
-    #请求每一个sheet，并把结果放进excel_file中
+
+    # 请求每一个sheet
+    final_data = OrderedDict()
+    for sheet in excel_file.sheets:
+        final_data[sheet.name] = microblog.fetch_weibo(sheet)
+
+    # 将结果写入文件
     workbook = Workbook()
-    for sheet_item in excel_file.sheet_items:
-        weibo_all_data = weibo.fetch_weibo(sheet_item)
-        excel.output_weibo_data(weibo_all_data, sheet_item, workbook)
+    for sheet_name, item_data in final_data.items():
+        excel.output_weibo_data(item_data, sheet_name, workbook)
     workbook.save(OUTPUT_FILE)
-    print '共耗时：', (datetime.now() - start_time).seconds, '秒'
+
+    print('共耗时：', (datetime.now() - start_time).seconds, '秒')
