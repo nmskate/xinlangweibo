@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding=utf-8
 
 from utils import HttpUtil
 from model import MicroBlogModel
 import datetime
 import config
-import urllib2
+import urllib
 import time
 
 
@@ -29,7 +29,7 @@ def fetch_weibo(sheet_item):
                     weibo_data.home_url = data_item.link.strip()
                     if not HttpUtil.correct_weibo_head(weibo_data.home_url):
                         weibo_data.data_status = MicroBlogModel.MicroBlogHome.DATA_STATUS_URL_ERROR
-                        raise Exception, '微博链接失效，跳过该微博'
+                        raise Exception
                 else:
                     html_contain_real_home_url = HttpUtil.crawl_weibo(__gen_name_url(data_item.bozhu_name))
                     #用户的微博主页地址
@@ -52,9 +52,9 @@ def fetch_weibo(sheet_item):
                 if weibo_data.data_status != MicroBlogModel.MicroBlogHome.DATA_STATUS_OK:
                     weibo_data.data_status = MicroBlogModel.MicroBlogHome.DATA_STATUS_ERROR
                 weibo_data.latest_weibo = []
-                print data_item.bozhu_excel_name, "的微博信息获取失败，跳过该博客"
+                print(data_item.bozhu_excel_name, "的微博信息获取失败，跳过该博客")
             else:
-                print weibo_data.name, weibo_data.home_url, len(weibo_data.latest_weibo)
+                print(weibo_data.name, weibo_data.home_url, len(weibo_data.latest_weibo))
 
         weibo_data_all.append(weibo_data)
         time.sleep(1)
@@ -65,8 +65,8 @@ def fetch_weibo(sheet_item):
 #生成按名字搜索的页面地址
 def __gen_name_url(name):
     if name == '':
-        raise Exception, '1'
-    return config.BASE_URL_NAME_SEARCH + urllib2.quote(urllib2.quote(name).encode()).encode()
+        raise Exception
+    return config.BASE_URL_NAME_SEARCH + urllib.parse.quote(urllib.parse.quote(name))
 
 
 #获取按名字搜索页面中的真实地址
@@ -91,7 +91,7 @@ def __get_real_home_url(name, real_home_html):
             href_all = real_home_html[href_start:href_end]
             return (href_all[href_all.find('=') + 1:]).replace("\\", '').strip("=\"")
     except:
-        raise Exception, '2'
+        raise Exception
 
 
 #获取用于微博主页的'微博'标签页地址
@@ -293,10 +293,10 @@ def __fetch_all_data(domain_id, user_id, weibo_url):
                 latest_weibo_data = latest_weibo_data + first_ajax_data
                 latest_weibo_data = latest_weibo_data + second_ajax_data
             except:
-                raise Exception, '解析微博数据错误，跳过该微博'
+                raise Exception
                 break
         else:
-            raise Exception, '微博地址错误，跳过该微博'
+            raise Exception
             break
 
         page_num += 1

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #coding=utf-8
 
 __author__ = 'zero.liu'
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     #程序开始时间
     start_time = datetime.now()
 
-    # 存放原始数据的excel文件
+    # 解析excel中的原始数据
     excel_file = excel.read_excel_file(INPUT_FILE)
 
     # 请求每一个sheet
