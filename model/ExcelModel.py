@@ -12,6 +12,9 @@ class Row:
         # 序号
         self.sequence = 0
 
+        # sheet序号
+        self.sheet_sequence = 0
+
         # 博主名
         self.blogger_real_name = ""
 

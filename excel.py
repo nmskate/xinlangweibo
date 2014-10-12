@@ -32,6 +32,9 @@ def read_excel_file(input_file_name):
                 # 序号，重排序号
                 row.sequence = index - 2 + 1
 
+                # sheet序号
+                row.sheet_sequence = cur_sheet_index
+
                 # 博主名
                 if sheet.blogger_name_index >= 0:
                     blogger_excel_name = str(workbook_sheet.cell(index, sheet.blogger_name_index).value).strip()
