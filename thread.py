@@ -5,152 +5,135 @@ __author__ = 'zero.liu'
 
 import threading
 from time import sleep
+from queue import Queue
 
+
+# 可改变大小的线程池类。创建一个线程池接受任务，传递给线程执行任务
 class ThreadPool:
-
-    """Flexible thread pool class.  Creates a pool of threads, then
-    accepts tasks that will be dispatched to the next available
-    thread."""
-
-    def __init__(self, numThreads):
-
-        """Initialize the thread pool with numThreads workers."""
-
-        self.__threads = []
+    def __init__(self, thread_num):
         self.__resizeLock = threading.Condition(threading.Lock())
         self.__taskLock = threading.Condition(threading.Lock())
-        self.__tasks = []
+        self.__threads = []
+        self.__tasks = Queue()
         self.__isJoining = False
-        self.setThreadCount(numThreads)
 
-    def setThreadCount(self, newNumThreads):
+        # 为线程池中的线程分配id
+        self.__thread_id = 0
 
-        """ External method to set the current pool size.  Acquires
-        the resizing lock, then calls the internal version to do real
-        work."""
+        self.set_thread_count(thread_num)
 
-        # Can't change the thread count if we're shutting down the pool!
+    # 重置线程池大小的公有方法，需要持有重置锁，然后调用重置的私有方法
+    def set_thread_count(self, new_thread_num):
+        # 如果关闭了线程池就不能重置线程池大小
         if self.__isJoining:
             return False
 
         self.__resizeLock.acquire()
         try:
-            self.__setThreadCountNolock(newNumThreads)
+            self.__set_thread_count_no_lock(new_thread_num)
         finally:
             self.__resizeLock.release()
         return True
 
-    def __setThreadCountNolock(self, newNumThreads):
+    # 重置线程池大小的私有方法，这里假定已经持有了重置锁
+    def __set_thread_count_no_lock(self, new_thread_num):
+        # 增加线程池的大小
+        while new_thread_num > len(self.__threads):
+            new_thread = ThreadPoolThread(self)
+            self.__threads.append(new_thread)
 
-        """Set the current pool size, spawning or terminating threads
-        if necessary.  Internal use only; assumes the resizing lock is
-        held."""
-
-        # If we need to grow the pool, do so
-        while newNumThreads > len(self.__threads):
-            newThread = ThreadPoolThread(self)
-            self.__threads.append(newThread)
-            newThread.start()
-        # If we need to shrink the pool, do so
-        while newNumThreads < len(self.__threads):
-            self.__threads[0].goAway()
+        # 减小线程池大小
+        while new_thread_num < len(self.__threads):
+            self.__threads[0].go_away()
             del self.__threads[0]
 
-    def getThreadCount(self):
-
-        """Return the number of threads in the pool."""
-
+    # 获取线程池大小
+    def get_thread_count(self):
         self.__resizeLock.acquire()
         try:
             return len(self.__threads)
         finally:
             self.__resizeLock.release()
 
-    def queueTask(self, task, args=None, taskCallback=None):
-
-        """Insert a task into the queue.  task must be callable;
-        args and taskCallback can be None."""
-
-        if self.__isJoining == True:
+    # 向任务队列中添加一个任务，task必须是一个可调用的函数
+    def add_task(self, task, args=None, callback_task_=None):
+        if self.__isJoining:
             return False
         if not callable(task):
             return False
 
         self.__taskLock.acquire()
         try:
-            self.__tasks.append((task, args, taskCallback))
+            self.__tasks.put((task, args, callback_task_))
             return True
         finally:
             self.__taskLock.release()
 
-    def getNextTask(self):
-
-        """ Retrieve the next task from the task queue.  For use
-        only by ThreadPoolThread objects contained in the pool."""
-
+    # 获取任务队列中的下一个任务
+    def next_task(self):
         self.__taskLock.acquire()
         try:
-            if self.__tasks == []:
-                return (None, None, None)
+            if self.__tasks.empty():
+                return None, None, None
             else:
-                return self.__tasks.pop(0)
+                return self.__tasks.get()
         finally:
             self.__taskLock.release()
 
-    def joinAll(self, waitForTasks = True, waitForThreads = True):
+    # 为线程池中的线程分配id
+    def gen_thread_id(self):
+        self.__thread_id += 1
+        return self.__thread_id
 
-        """ Clear the task queue and terminate all pooled threads,
-        optionally allowing the tasks and threads to finish."""
+    # 启动所有线程
+    def start_all(self):
+        for _thread in self.__threads:
+            _thread.start()
 
-        # Mark the pool as joining to prevent any more task queueing
+    # 清空任务队列，终止线程池中所有线程。可选允许任务和线程执行完
+    def join_all(self, wait_for_task=True, wait_for_threads=True):
+        # 标记线程池处于joining状态，阻止任务队列添加任务
         self.__isJoining = True
 
-        # Wait for tasks to finish
-        if waitForTasks:
-            while self.__tasks != []:
+        # 等待任务结束
+        if wait_for_task:
+            while not self.__tasks.empty():
                 sleep(.1)
 
-        # Tell all the threads to quit
+        # 通知线程退出
         self.__resizeLock.acquire()
         try:
-            self.__setThreadCountNolock(0)
+            self.__set_thread_count_no_lock(0)
             self.__isJoining = True
 
-            # Wait until all threads have exited
-            if waitForThreads:
+            # 等待线程执行完退出
+            if wait_for_threads:
                 for t in self.__threads:
                     t.join()
                     del t
 
-            # Reset the pool for potential reuse
+            # 重置线程池
             self.__isJoining = False
         finally:
             self.__resizeLock.release()
 
 
-
+# 线程池中的线程类
 class ThreadPoolThread(threading.Thread):
-
-    """ Pooled thread class. """
-
     threadSleepTime = 0.1
 
-    def __init__(self, pool):
-
-        """ Initialize the thread and remember the pool. """
-
+    # 为线程分配一个线程池
+    def __init__(self, thread_pool):
         threading.Thread.__init__(self)
-        self.__pool = pool
+        self.__pool = thread_pool
         self.__isDying = False
+        self.__thread_id = thread_pool.gen_thread_id()
 
+    # 在收到退出信号前，一直取任务、执行任务
     def run(self):
-
-        """ Until told to quit, retrieve the next task and execute
-        it, calling the callback if any.  """
-
-        while self.__isDying == False:
-            cmd, args, callback = self.__pool.getNextTask()
-            # If there's nothing to do, just sleep a bit
+        while not self.__isDying:
+            cmd, args, callback = self.__pool.next_task()
+            # 如果没有任务，就短暂休息
             if cmd is None:
                 sleep(ThreadPoolThread.threadSleepTime)
             elif callback is None:
@@ -158,21 +141,15 @@ class ThreadPoolThread(threading.Thread):
             else:
                 callback(cmd(args))
 
-    def goAway(self):
-
-        """ Exit the run loop next time through."""
-
+    # 线程退出
+    def go_away(self):
         self.__isDying = True
 
-# Usage example
 if __name__ == "__main__":
 
     from random import randrange
 
-    # Sample task 1: given a start and end value, shuffle integers,
-    # then sort them
-
-    def sortTask(data):
+    def sort_task(data):
         print("SortTask starting for ", data)
         numbers = list(range(data[0], data[1]))
         for a in numbers:
@@ -183,30 +160,28 @@ if __name__ == "__main__":
         print("SortTask done for ", data)
         return "Sorter ", data
 
-    # Sample task 2: just sleep for a number of seconds.
-
-    def waitTask(data):
+    def wait_task(data):
         print("WaitTask starting for ", data)
         print("WaitTask sleeping for %d seconds" % data)
         sleep(data)
         return "Waiter", data
 
-    # Both tasks use the same callback
-
-    def taskCallback(data):
+    def callback_task(data):
         print("Callback called for", data)
 
-    # Create a pool with three worker threads
+    pool = ThreadPool(4)
 
-    pool = ThreadPool(3)
+    sleep(1)
+    pool.add_task(sort_task, (1000, 100000), callback_task)
+    # pool.add_task(wait_task, 5, callback_task)
+    pool.add_task(sort_task, (200, 200000), callback_task)
+    # pool.add_task(wait_task, 2, callback_task)
+    pool.add_task(sort_task, (3, 30000), callback_task)
+    # pool.add_task(wait_task, 7, callback_task)
+    pool.add_task(sort_task, (4, 40000), callback_task)
+    pool.add_task(sort_task, (7, 70000), callback_task)
+    pool.add_task(sort_task, (88, 80000), callback_task)
+    pool.add_task(sort_task, (222, 20000), callback_task)
 
-    # Insert tasks into the queue and let them run
-    pool.queueTask(sortTask, (1000, 100000), taskCallback)
-    pool.queueTask(waitTask, 5, taskCallback)
-    pool.queueTask(sortTask, (200, 200000), taskCallback)
-    pool.queueTask(waitTask, 2, taskCallback)
-    pool.queueTask(sortTask, (3, 30000), taskCallback)
-    pool.queueTask(waitTask, 7, taskCallback)
-
-    # When all tasks are finished, allow the threads to terminate
-    pool.joinAll()
+    pool.start_all()
+    pool.join_all()
