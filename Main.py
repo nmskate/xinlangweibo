@@ -15,16 +15,21 @@ INPUT_FILE = 'xml.xls'
 OUTPUT_FILE = 'result_' + datetime.now().strftime('%Y%m%d%H%M%S') + '.xls'
 
 
+def init_http_client():
+    #初始化HttpClient，即全局urllib2
+    HttpClient(user_agent=Configuration.USER_AGENT, cookie_file='cookie.bak', init_cookie=do_login)
+
+
+def do_login(cookie_file=None):
+    print(cookie_file)
+
 if __name__ == '__main__':
     #程序开始时间
     start_time = datetime.now()
 
-    #初始化一个全局urllib2
-    HttpClient(user_agent=Configuration.USER_AGENT)
-
     # 解析excel中的原始数据
-    excel_file = Excel.read_excel_file(INPUT_FILE)
-
+    # excel_file = Excel.read_excel_file(INPUT_FILE)
+    init_http_client()
     # # 请求每一个sheet
     # final_data = OrderedDict()
     # for sheet in excel_file.sheets:

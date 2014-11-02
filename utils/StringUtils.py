@@ -4,16 +4,17 @@
 __author__ = 'zero.liu'
 
 import re
+from common import Charset
 
 
-#去除字符串中的不可打印字符
+# 去除字符串中的不可打印字符
 def strip_blank(string):
     if type(string) != str:
         string = str(string)
     return re.sub(r'\s', '', string)
 
 
-#仅保留字符串中的非数字，如果字符串中无数字，取默认值default
+# 仅保留字符串中的非数字，如果字符串中无数字，取默认值default
 def retain_digit(string, default='0'):
     if type(string) != str:
         string = str(string)
@@ -25,7 +26,7 @@ def retain_digit(string, default='0'):
         return string
 
 
-#将字符串转换成浮点型，如果不能转换，返回default
+# 将字符串转换成浮点型，如果不能转换，返回default
 def convert_to_float(string, default=0.0):
     try:
         result = float(string)
@@ -34,7 +35,7 @@ def convert_to_float(string, default=0.0):
     return result
 
 
-#将字符串转换成整型，如果不能转换，返回default
+# 将字符串转换成整型，如果不能转换，返回default
 def convert_to_int(string, default=0.0):
     try:
         result = int(float(string))
@@ -43,8 +44,18 @@ def convert_to_int(string, default=0.0):
     return result
 
 
+# 将字符串转换成bytes类型
+def convert_to_bytes(string):
+    if string is not None and isinstance(string, str):
+        return string.encode(Charset.DEFAULT)
+
+    return string
+
+
 if __name__ == "__main__":
     print(retain_digit('300w'))
     print(retain_digit('300W'))
     print(retain_digit('五万'))
     print(strip_blank('abc d e'))
+
+    print(convert_to_bytes('中文'))
