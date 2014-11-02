@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # coding=utf-8
 
-from utils import HttpUtil
+from utils import HttpUtils
 from model import MicroBlogModel
 import datetime
-import config
+import Configuration
 import urllib
 import time
 
@@ -27,16 +27,16 @@ def fetch_weibo(sheet_item):
                 #如果excel中的链接地址不为空，校验链接的有效性和博主是否改名了，如果改名了就跳过这条博客。如果链接地址为空，根据博主名，查询链接地址
                 if data_item.link.strip() != "":
                     weibo_data.home_url = data_item.link.strip()
-                    if not HttpUtil.correct_weibo_head(weibo_data.home_url):
+                    if not HttpUtils.correct_weibo_head(weibo_data.home_url):
                         weibo_data.data_status = MicroBlogModel.MicroBlogHome.DATA_STATUS_URL_ERROR
                         raise Exception
                 else:
-                    html_contain_real_home_url = HttpUtil.crawl_weibo(__gen_name_url(data_item.bozhu_name))
+                    html_contain_real_home_url = HttpUtils.crawl_weibo(__gen_name_url(data_item.bozhu_name))
                     #用户的微博主页地址
                     real_home_url = __get_real_home_url(data_item.bozhu_name, html_contain_real_home_url)
                     weibo_data.home_url = real_home_url
 
-                html_weibo_home = HttpUtil.crawl_weibo(weibo_data.home_url)
+                html_weibo_home = HttpUtils.crawl_weibo(weibo_data.home_url)
                 weibo_data.guanzhu_num = __get_home_guanzhu_num(html_weibo_home)
                 weibo_data.fensi_num = __get_home_fensi_num(html_weibo_home)
                 weibo_data.weibo_num = __get_home_weibo_num(html_weibo_home)
@@ -66,7 +66,7 @@ def fetch_weibo(sheet_item):
 def __gen_name_url(name):
     if name == '':
         raise Exception
-    return config.BASE_URL_NAME_SEARCH + urllib.parse.quote(urllib.parse.quote(name))
+    return Configuration.BASE_URL_NAME_SEARCH + urllib.parse.quote(urllib.parse.quote(name))
 
 
 #获取按名字搜索页面中的真实地址
@@ -106,7 +106,7 @@ def __get_real_weibo_url(real_name_url):
             if start == -1:
                 href = tmp[tmp.find('href'):end]
                 href = href[href.find('='):href.find(' ')]
-                real_weibo_url = config.BASE_URL + href.replace("\\", '').strip("=\"")
+                real_weibo_url = Configuration.BASE_URL + href.replace("\\", '').strip("=\"")
                 break
             else:
                 tmp = tmp[(start + 1):end]
@@ -281,13 +281,13 @@ def __fetch_all_data(domain_id, user_id, weibo_url):
         #生成第i页地址
         page_weibo_url = weibo_url + "&page=" + str(page_num)
         #先检测微博页面地址是否正确
-        if HttpUtil.correct_weibo_head(page_weibo_url):
+        if HttpUtils.correct_weibo_head(page_weibo_url):
             try:
                 #先解析页面上有的数据
-                latest_weibo_data = latest_weibo_data + __fetch_latest_data(HttpUtil.crawl_weibo(page_weibo_url))
+                latest_weibo_data = latest_weibo_data + __fetch_latest_data(HttpUtils.crawl_weibo(page_weibo_url))
                 #再发ajax请求, 解析第i页剩下的数据, 一共需要发2次ajax请求
-                first_ajax_html = HttpUtil.crawl_weibo(__first_roll_ajax_url(domain_id, page_num, 0, user_id))
-                second_ajax_html = HttpUtil.crawl_weibo(__first_roll_ajax_url(domain_id, page_num, 1, user_id))
+                first_ajax_html = HttpUtils.crawl_weibo(__first_roll_ajax_url(domain_id, page_num, 0, user_id))
+                second_ajax_html = HttpUtils.crawl_weibo(__first_roll_ajax_url(domain_id, page_num, 1, user_id))
                 first_ajax_data = __fetch_latest_data(first_ajax_html)
                 second_ajax_data = __fetch_latest_data(second_ajax_html)
                 latest_weibo_data = latest_weibo_data + first_ajax_data

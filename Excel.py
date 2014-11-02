@@ -5,7 +5,7 @@ __author__ = 'zero.liu'
 
 import datetime
 import sys
-from utils import StringUtil
+from utils import StringUtils
 from model import MicroBlogModel
 from model.ExcelModel import Excel, Sheet, Row
 
@@ -41,49 +41,49 @@ def read_excel_file(input_file_name):
                     blogger_real_name = blogger_excel_name
                     if blogger_excel_name != "" and blogger_excel_name.endswith('V'):
                         blogger_real_name = blogger_excel_name[0: len(blogger_excel_name) - 1]
-                    row.blogger_excel_name = StringUtil.strip_blank(blogger_excel_name)
-                    row.blogger_real_name = StringUtil.strip_blank(blogger_real_name)
+                    row.blogger_excel_name = StringUtils.strip_blank(blogger_excel_name)
+                    row.blogger_real_name = StringUtils.strip_blank(blogger_real_name)
 
                 # 链接
                 if sheet.link_index >= 0:
                     link = str(workbook_sheet.cell(index, sheet.link_index).value).strip()
-                    row.link = StringUtil.strip_blank(link.replace('e.weibo.com', 'weibo.com'))
+                    row.link = StringUtils.strip_blank(link.replace('e.weibo.com', 'weibo.com'))
 
                 # 粉丝数/万
                 if sheet.fans_num_index >= 0:
                     fans_num = str(workbook_sheet.cell(index, sheet.fans_num_index).value).strip()
-                    fans_num = StringUtil.convert_to_float(fans_num)
+                    fans_num = StringUtils.convert_to_float(fans_num)
                     row.fans_num = round(float("%.2f" % float(fans_num)), 1)
 
                 # 平均转发数
                 if sheet.forward_num_avg_index >= 0:
                     forward_num_avg = str(workbook_sheet.cell(index, sheet.forward_num_avg_index).value).strip()
-                    row.forward_num_avg = StringUtil.convert_to_int(forward_num_avg, '-1')
+                    row.forward_num_avg = StringUtils.convert_to_int(forward_num_avg, '-1')
 
                 # 说明
                 if sheet.explain_index >= 0:
                     explain = str(workbook_sheet.cell(index, sheet.explain_index).value).strip()
-                    row.explain = StringUtil.strip_blank(explain)
+                    row.explain = StringUtils.strip_blank(explain)
 
                 # 转发
                 if sheet.forward_price_index >= 0:
                     forward_price = str(workbook_sheet.cell(index, sheet.forward_price_index).value).strip()
-                    row.forward_price = StringUtil.convert_to_int(forward_price, '-1')
+                    row.forward_price = StringUtils.convert_to_int(forward_price, '-1')
 
                 # 直发
                 if sheet.direct_send_price_index >= 0:
                     direct_send_price = str(workbook_sheet.cell(index, sheet.direct_send_price_index).value).strip()
-                    row.direct_send_price = StringUtil.convert_to_int(direct_send_price, '-1')
+                    row.direct_send_price = StringUtils.convert_to_int(direct_send_price, '-1')
 
                 #推荐级别
                 if sheet.recommend_level_index >= 0:
                     recommend_level = str(workbook_sheet.cell(index, sheet.recommend_level_index).value).strip()
-                    row.recommend_level = StringUtil.strip_blank(recommend_level)
+                    row.recommend_level = StringUtils.strip_blank(recommend_level)
 
                 # 状态码
                 if sheet.status_code_index >= 0:
                     status_code = str(workbook_sheet.cell(index, sheet.status_code_index).value).strip()
-                    row.status_code = StringUtil.convert_to_int(status_code)
+                    row.status_code = StringUtils.convert_to_int(status_code)
 
                 sheet.rows.append(row)
 
@@ -117,7 +117,7 @@ def __check_excel_file(excel_file_name):
 def __locate_col_index(sheet, workbook_sheet):
     cur_column = 0
     for name in workbook_sheet.row_values(1):
-        name = StringUtil.strip_blank(name)
+        name = StringUtils.strip_blank(name)
         if ["序号"].count(name) == 1:
             sheet.sequence_index = cur_column
         if ["博主", "账号名称"].count(name) == 1:

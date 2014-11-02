@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 #coding=utf-8
 
+__author__ = 'zero.liu'
+
+
 #新浪微博域
 BASE_URL = '''http://weibo.com'''
 
