@@ -47,7 +47,21 @@ def convert_to_int(string, default=0.0):
 # 将字符串转换成bytes类型
 def convert_to_bytes(string):
     if string is not None and isinstance(string, str):
-        return string.encode(Charset.DEFAULT)
+        try:
+            return bytes(string, encoding=Charset.DEFAULT)
+        except UnicodeDecodeError:
+            pass
+
+    return string
+
+
+# 将字符串转换成bytes类型
+def convert_to_str(string, encoding=Charset.DEFAULT):
+    if string is not None and isinstance(string, bytes):
+        try:
+            return str(string, encoding=encoding)
+        except UnicodeDecodeError:
+            pass
 
     return string
 
