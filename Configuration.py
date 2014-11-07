@@ -5,10 +5,10 @@ __author__ = 'zero.liu'
 
 
 #用户名
-UESRNAME = '''nmjungyumi@sina.com'''
+UESRNAME = '''xxx@sina.com'''
 
 #密码
-PASSWORD = '''nmjungyumi'''
+PASSWORD = '''xxx'''
 
 #新浪微博域
 BASE_URL = '''http://weibo.com'''
