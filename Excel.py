@@ -5,6 +5,8 @@ __author__ = 'zero.liu'
 
 import datetime
 import sys
+import logging
+
 from utils import StringUtils
 from model import MicroBlogModel
 from model.ExcelModel import Excel, Sheet, Row
@@ -95,9 +97,10 @@ def read_excel_file(input_file_name):
 
 # 检查输入文件格式是否正确, 正确返回文件, 错误退出
 def __check_excel_file(excel_file_name):
+    logging.info('input excel file:' + excel_file_name)
     excel = Excel(excel_file_name)
     if isinstance(excel.workbook, type(None)):
-        print(excel_file_name, '不存在，程序退出')
+        logging.error(excel_file_name + ' is not existed')
         sys.exit(0)
 
     flag = True
@@ -105,8 +108,8 @@ def __check_excel_file(excel_file_name):
         for name in sheet.row_values(1):
             if ALLOW_COLUMNS.count(name.replace(' ', '')) == 0:
                 flag = False
-                print("包含有不合法的列名 --- sheet名(", sheet.name, "), 列名(", name.encode('utf-8'), ")")
-                print('仅允许的列名 --- 序号, 类型, 博主, 账号名称, 链接, 粉丝数/万, 粉丝/万, 平均转发数, 说明, 转发/元, 转发, 直发/元, 直发, 推荐级别')
+                logging.error('Containing illegal column name. sheet name:' + sheet.name + ', column name:' + name)
+                logging.error('Allow column name:序号, 类型, 博主, 账号名称, 链接, 粉丝数/万, 粉丝/万, 平均转发数, 说明, 转发/元, 转发, 直发/元, 直发, 推荐级别')
         if not flag:
             sys.exit(0)
         else:

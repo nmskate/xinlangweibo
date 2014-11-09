@@ -92,6 +92,7 @@ class HttpClient:
                 cls.__add_headers(user_agent=user_agent, cookie=cookie)
 
             cls.__init_http_client = True
+            logging.info('Initialize http client success...')
 
     '''HTTP GET 方法'''
     @classmethod

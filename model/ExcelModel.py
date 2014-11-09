@@ -5,6 +5,8 @@ __author__ = 'zero.liu'
 
 import xlrd
 import os
+import sys
+import logging
 
 
 class Row:
@@ -16,13 +18,13 @@ class Row:
         self.sheet_sequence = 0
 
         # 博主名
-        self.blogger_real_name = ""
+        self.blogger_real_name = ''
 
         # excel中的博主名，有些博主名后面会有一个V
-        self.blogger_excel_name = ""
+        self.blogger_excel_name = ''
 
         # 链接
-        self.link = ""
+        self.link = ''
 
         # 粉丝数/万
         self.fans_num = 0
@@ -31,7 +33,7 @@ class Row:
         self.forward_num_avg = 0
 
         # 说明
-        self.explain = ""
+        self.explain = ''
 
         # 转发
         self.forward_price = 0
@@ -41,6 +43,9 @@ class Row:
 
         # 推荐级别
         self.recommend_level = ''
+
+        #最后更新时间
+        self.update_time = None
 
         # 状态码
         self.status_code = 0
@@ -98,7 +103,12 @@ class Excel:
 
         # excel workbook
         if os.path.exists(name):
-            self.workbook = xlrd.open_workbook(name)
+            try:
+                self.workbook = xlrd.open_workbook(name)
+            except xlrd.XLRDError as e:
+                logging.error('Loading workbook error, excel file:' + name)
+                logging.error(e)
+                sys.exit(0)
         else:
             self.workbook = None
 

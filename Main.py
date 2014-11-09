@@ -28,6 +28,7 @@ def init_http_client():
 
 
 def init_logging(file=LOGGER_FILE):
+    # 初始化日志
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
                         datefmt='%a, %d %b %Y %H:%M:%S',
@@ -39,13 +40,12 @@ if __name__ == '__main__':
     # 程序开始时间
     start_time = datetime.now()
 
-    # 解析excel中的原始数据
-    excel_file = Excel.read_excel_file(INPUT_FILE)
     init_logging()
     init_http_client()
 
-    html_ = HttpClient.get('http://www.weibo.com/kaifulee')
-    print(StringUtils.convert_to_str(html_))
+    # 解析excel中的原始数据
+    excel_file = Excel.read_excel_file(INPUT_FILE)
+
     # # 请求每一个sheet
     # final_data = OrderedDict()
     # for sheet in excel_file.sheets:

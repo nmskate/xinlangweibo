@@ -4,6 +4,7 @@
 __author__ = 'zero.liu'
 
 import re
+
 from common import Charset
 
 
@@ -45,12 +46,12 @@ def convert_to_int(string, default=0.0):
 
 
 # 将字符串转换成bytes类型
-def convert_to_bytes(string):
+def convert_to_bytes(string, encoding=Charset.DEFAULT):
     if string is not None and isinstance(string, str):
         try:
-            return bytes(string, encoding=Charset.DEFAULT)
-        except UnicodeDecodeError:
-            pass
+            return bytes(string, encoding=encoding)
+        except UnicodeDecodeError as e:
+            raise e
 
     return string
 
@@ -60,8 +61,8 @@ def convert_to_str(string, encoding=Charset.DEFAULT):
     if string is not None and isinstance(string, bytes):
         try:
             return str(string, encoding=encoding)
-        except UnicodeDecodeError:
-            pass
+        except UnicodeDecodeError as e:
+            raise e
 
     return string
 

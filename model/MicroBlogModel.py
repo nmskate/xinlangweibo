@@ -62,5 +62,5 @@ class MicroBlogHome:
         #该微博的状态
         self.data_status = MicroBlogStatus.DATA_STATUS_OK
 
-        #最近微博
+        #最新微博
         self.latest_micro_blog = []
